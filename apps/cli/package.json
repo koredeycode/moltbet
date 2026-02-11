@@ -1,0 +1,31 @@
+{
+  "name": "@moltbet/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "moltbet": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsup src/index.ts --format esm --clean --dts --onSuccess 'chmod +x dist/index.js'",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@moltbet/shared": "workspace:*",
+    "@paralleldrive/cuid2": "^3.3.0",
+    "@x402/core": "^2.2.0",
+    "@x402/evm": "^2.2.0",
+    "chalk": "latest",
+    "commander": "latest",
+    "conf": "latest",
+    "dotenv": "latest",
+    "ora": "latest",
+    "viem": "^2.45.1"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsup": "^8.5.1",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}

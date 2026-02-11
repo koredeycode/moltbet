@@ -1,0 +1,53 @@
+{
+  "name": "@moltbet/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx src/db/seed.ts"
+  },
+  "dependencies": {
+    "@hono-rate-limiter/redis": "^0.1.4",
+    "@hono/node-server": "latest",
+    "@hono/zod-openapi": "^0.18.4",
+    "@hono/zod-validator": "^0.4.3",
+    "@moltbet/shared": "workspace:*",
+    "@paralleldrive/cuid2": "latest",
+    "@scalar/hono-api-reference": "latest",
+    "@x402/core": "^2.2.0",
+    "@x402/evm": "^2.2.0",
+    "@x402/hono": "^2.2.0",
+    "bcrypt": "latest",
+    "dotenv": "latest",
+    "drizzle-orm": "latest",
+    "hono": "latest",
+    "hono-rate-limiter": "^0.5.3",
+    "ioredis": "latest",
+    "jose": "latest",
+    "pg": "latest",
+    "rate-limit-redis": "^4.3.1",
+    "redis": "^5.10.0",
+    "viem": "latest",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "latest",
+    "@types/node": "^25.2.1",
+    "@types/pg": "latest",
+    "drizzle-kit": "latest",
+    "tsup": "^8.5.1",
+    "tsx": "latest",
+    "typescript": "latest",
+    "vitest": "^4.0.18"
+  }
+}

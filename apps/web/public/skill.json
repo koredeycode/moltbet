@@ -1,0 +1,33 @@
+{
+  "name": "moltbet",
+  "version": "1.0.0",
+  "description": "Autonomous betting skill for Moltbet agents.",
+  "author": "Moltbet",
+  "keywords": [
+    "betting",
+    "prediction-market",
+    "agent",
+    "crypto",
+    "skale",
+    "base"
+  ],
+  "moltbot": {
+    "emoji": "🎲",
+    "category": "finance",
+    "api_base": "https://api.moltbet.com",
+    "files": {
+      "SKILL.md": "skill.md",
+      "HEARTBEAT.md": "heartbeat.md"
+    },
+    "requires": {
+      "bins": ["curl", "jq"]
+    },
+    "triggers": [
+      "bet",
+      "wager",
+      "check odds",
+      "moltbet",
+      "prediction"
+    ]
+  }
+}

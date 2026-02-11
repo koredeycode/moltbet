@@ -1,0 +1,108 @@
+yusufakoredey@Yusuf-Akorede-Yusuf:~/Desktop/skales_test/moltbets_test/packages/contracts$ source .env && forge script script/Deploy.s.sol:Deploy --rpc-url $BASE_SEPOLIA_RPC --broadcast --verify --etherscan-api-key $BASESCAN_API_KEY
+[⠢] Compiling...
+[⠆] Compiling 1 files with Solc 0.8.24
+[⠰] Solc 0.8.24 finished in 4.99s
+Compiler run successful with warnings:
+Warning (2072): Unused local variable.
+  --> script/Deploy.s.sol:25:9:
+   |
+25 |         address facilitator = vm.envAddress("FACILITATOR_ADDRESS");
+   |         ^^^^^^^^^^^^^^^^^^^
+
+Warning: Detected artifacts built from source files that no longer exist. Run `forge clean` to make sure builds are in sync with project files.
+ - /home/yusufakoredey/Desktop/skales_test/moltbets_test/packages/contracts/src/MoltbetReputationRegistry.sol
+ - /home/yusufakoredey/Desktop/skales_test/moltbets_test/packages/contracts/src/interfaces/IReputationRegistry.sol
+ - /home/yusufakoredey/Desktop/skales_test/moltbets_test/packages/contracts/src/MoltbetValidationRegistry.sol
+ - /home/yusufakoredey/Desktop/skales_test/moltbets_test/packages/contracts/src/MoltReputationRegistry.sol
+ - /home/yusufakoredey/Desktop/skales_test/moltbets_test/packages/contracts/src/MoltValidationRegistry.sol
+ - /home/yusufakoredey/Desktop/skales_test/moltbets_test/packages/contracts/test/MoltbetIdentity.t.sol
+ - /home/yusufakoredey/Desktop/skales_test/moltbets_test/packages/contracts/src/interfaces/IValidationRegistry.sol
+ - /home/yusufakoredey/Desktop/skales_test/moltbets_test/packages/contracts/src/MoltbetIdentity.sol
+Script ran successfully.
+
+== Logs ==
+  MoltbetIdentityRegistry deployed to: 0x1Fd3B34dd8C063d7F669D0A871E89066c52B8066
+  MoltEscrow deployed to: 0x0Ca38E3Ea35766C12DA91E7e015937ed3aeB744C
+  
+--- Add to .env ---
+  IDENTITY_ADDRESS= 0x1Fd3B34dd8C063d7F669D0A871E89066c52B8066
+  ESCROW_ADDRESS= 0x0Ca38E3Ea35766C12DA91E7e015937ed3aeB744C
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 84532
+
+Estimated gas price: 0.0014 gwei
+
+Estimated total gas used for script: 3120597
+
+Estimated amount required: 0.0000043688358 ETH
+
+==========================
+
+##### base-sepolia
+✅  [Success] Hash: 0x7e84ac850cf0dc4163db6d81bb40e085b2e1f86317afb04b8020323a8599513c
+Contract Address: 0x0Ca38E3Ea35766C12DA91E7e015937ed3aeB744C
+Block: 37315251
+Paid: 0.000001630554 ETH (1358795 gas * 0.0012 gwei)
+
+⠠ Sequence #1 on base-sepolia | Waiting for pending transactions
+    ⠠ [Pending] 0xce84e171d4a7d40efe74ecf0a678e83d7f2c8e58c8e9908eecfcb7597ccc4da5
+    ⠙ [00:00:02] [############################################################] 2/2 txes (0.0s)
+
+##### base-sepolia
+✅  [Success] Hash: 0xce84e171d4a7d40efe74ecf0a678e83d7f2c8e58c8e9908eecfcb7597ccc4da5
+Contract Address: 0x1Fd3B34dd8C063d7F669D0A871E89066c52B8066
+Block: 37315251
+Paid: 0.000001249998 ETH (1041665 gas * 0.0012 gwei)
+
+✅ Sequence #1 on base-sepolia | Total Paid: 0.000002880552 ETH (2400460 gas * avg 0.0012 gwei)
+                                                                                               
+
+==========================
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+##
+Start verification for (2) contracts
+Start verifying contract `0x1Fd3B34dd8C063d7F669D0A871E89066c52B8066` deployed on base-sepolia
+EVM version: cancun
+Compiler version: 0.8.24
+Optimizations:    200
+
+Submitting verification for [src/MoltbetIdentityRegistry.sol:MoltbetIdentityRegistry] 0x1Fd3B34dd8C063d7F669D0A871E89066c52B8066.
+Submitted contract for verification:
+        Response: `OK`
+        GUID: `dqli947h3zkiv3mxn9hfmprgemb3lxdycb4mzfaynwrsysi7iv`
+        URL: https://sepolia.basescan.org/address/0x1fd3b34dd8c063d7f669d0a871e89066c52b8066
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+Start verifying contract `0x0Ca38E3Ea35766C12DA91E7e015937ed3aeB744C` deployed on base-sepolia
+EVM version: cancun
+Compiler version: 0.8.24
+Optimizations:    200
+Constructor args: 000000000000000000000000036cbd53842c5426634e7929541ec2318f3dcf7e0000000000000000000000001fd3b34dd8c063d7f669d0a871e89066c52b8066
+
+Submitting verification for [src/MoltEscrow.sol:MoltEscrow] 0x0Ca38E3Ea35766C12DA91E7e015937ed3aeB744C.
+Submitted contract for verification:
+        Response: `OK`
+        GUID: `dtuetpr5fms5wvkm7kyzq7a9sryy9lu4jfikvzhfwwbdgizu6l`
+        URL: https://sepolia.basescan.org/address/0x0ca38e3ea35766c12da91e7e015937ed3aeb744c
+Contract verification status:
+Response: `NOTOK`
+Details: `Pending in queue`
+Warning: Verification is still pending...; waiting 15 seconds before trying again (7 tries remaining)
+Contract verification status:
+Response: `OK`
+Details: `Pass - Verified`
+Contract successfully verified
+All (2) contracts were verified!
+
+Transactions saved to: /home/yusufakoredey/Desktop/skales_test/moltbets_test/packages/contracts/broadcast/Deploy.s.sol/84532/run-latest.json
+
+Sensitive values saved to: /home/yusufakoredey/Desktop/skales_test/moltbets_test/packages/contracts/cache/Deploy.s.sol/84532/run-latest.json
+
+yusufakoredey@Yusuf-Akorede-Yusuf:~/Desktop/skales_test/moltbets_test/packages/contracts$ 

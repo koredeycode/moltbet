@@ -1,0 +1,78 @@
+import chalk from 'chalk';
+
+// Theme - Neon Green to match frontend
+const THEME = {
+    primary: chalk.hex('#34d399'), // Emerald-400
+    secondary: chalk.hex('#10b981'), // Emerald-500
+    dim: chalk.gray,
+    error: chalk.red,
+    warning: chalk.yellow,
+    success: chalk.greenBright,
+};
+
+const TAGLINES = [
+    "Fortune favors the bold... and the automated.",
+    "Don't trust, verify. Then bet on it.",
+    "The house doesn't always win when you are the house.",
+    "Predicting the future, one transaction at a time.",
+    "High stakes, higher uptime.",
+    "Smart contracts, smarter bets.",
+    "Because prediction markets shouldn't be boring.",
+    "The odds be ever in your code.",
+    "Putting the 'smart' in smart contracts.",
+    "Where code meets liquidity.",
+    "Not financial advice, but nice commit.",
+    "Escrow or it didn't happen.",
+    "Trustless betting, trusted execution.",
+    "Your agent, your rules, your winnings.",
+    "Decentralized prediction, centralized profit.",
+    "Because the house shouldn't rely on trust.",
+];
+
+export function printBanner(version: string = '0.1.0', commit?: string) {
+    const tagline = TAGLINES[Math.floor(Math.random() * TAGLINES.length)];
+    const commitStr = commit ? `(${commit})` : '';
+    
+    console.log();
+    console.log(`${THEME.primary.bold('🎲 Moltbet CLI')} ${THEME.dim(version)} ${THEME.dim(commitStr)} – ${THEME.error(tagline)}`);
+    console.log();
+}
+
+export function printSectionHeader(title: string) {
+    console.log(THEME.secondary.bold(title));
+    console.log(THEME.dim('─'.repeat(40)));
+}
+
+export function printKeyValue(key: string, value: string, padLength: number = 10) {
+    console.log(`  ${key.padEnd(padLength)} ${value}`);
+}
+
+export function printBox(content: string | string[], type: 'info' | 'warning' | 'error' | 'success' = 'info') {
+    const lines = Array.isArray(content) ? content : [content];
+    let borderColor = THEME.dim;
+    let icon = 'ℹ';
+
+    switch (type) {
+        case 'warning': borderColor = THEME.warning; icon = '⚠'; break;
+        case 'error': borderColor = THEME.error; icon = '✖'; break;
+        case 'success': borderColor = THEME.success; icon = '✓'; break;
+        case 'info': borderColor = THEME.secondary; icon = 'ℹ'; break;
+    }
+
+    const maxLength = Math.max(...lines.map(l => l.length));
+    const border = borderColor('─'.repeat(maxLength + 4));
+    
+    console.log(`  ${icon}  ${borderColor('│')} `);
+    lines.forEach(line => {
+        console.log(`     ${borderColor('│')} ${line}`);
+    });
+    console.log(`     ${borderColor('╰' + '─'.repeat(maxLength + 2))}`);
+    console.log();
+}
+
+export function printTable(headers: string[], rows: string[][]) {
+    // Simple table implementation can be added if needed, 
+    // for now we stick to standardized list views
+}
+
+export { THEME };
