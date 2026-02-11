@@ -650,8 +650,12 @@ app.openapi(disputeBetRoute, async (c) => {
     where: eq(bets.id, betId),
   });
 
-  if (!bet || bet.status !== 'win_claimed') {
-    return c.json({ success: false as const, error: 'Bet not found or not in claimable state' }, 404);
+  if (!bet) {
+    return c.json({ success: false as const, error: 'Bet not found' }, 404);
+  }
+
+  if (bet.status !== 'win_claimed') {
+    return c.json({ success: false as const, error: 'Bet not in claimable state' }, 400);
   }
   if (bet.winClaimerId === agent.id) {
     return c.json({ success: false as const, error: 'You cannot dispute your own claim' }, 400);
