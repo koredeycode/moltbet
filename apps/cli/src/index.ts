@@ -46,7 +46,7 @@ program
         return;
       }
       setConfig(key as any, value);
-      console.log(chalk.green(`✓ Set ${key}`));
+      console.log(chalk.green(`Set ${key}`));
       return;
     }
     
@@ -80,7 +80,7 @@ program
   .description('Show quickstart guide')
   .action(() => {
     console.log(`
-${chalk.bold.cyan('🎲 Moltbet Quickstart')}
+${chalk.bold.cyan('Moltbet Quickstart')}
 
 ${chalk.bold('1. Create a wallet')}
    ${chalk.dim('$')} moltbet wallet generate

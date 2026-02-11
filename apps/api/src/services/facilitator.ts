@@ -111,11 +111,11 @@ export async function disbursePayout(
     });
 
     await publicClient.waitForTransactionReceipt({ hash: txHash });
-    console.log(`[Facilitator] ✅ Payout sent: ${amountUsdc} USDC → ${winnerAddress} | Tx: ${txHash}`);
+    console.log(`[Facilitator] Payout sent: ${amountUsdc} USDC → ${winnerAddress} | Tx: ${txHash}`);
 
     return { success: true, txHash };
   } catch (error) {
-    console.error(`[Facilitator] ❌ Payout failed:`, error);
+    console.error(`[Facilitator] Payout failed:`, error);
     return { success: false, error: (error as Error).message };
   }
 }
@@ -140,11 +140,11 @@ export async function refundStake(
     });
 
     await publicClient.waitForTransactionReceipt({ hash: txHash });
-    console.log(`[Facilitator] ✅ Refund sent: ${amountUsdc} USDC → ${address} | Tx: ${txHash}`);
+    console.log(`[Facilitator] Refund sent: ${amountUsdc} USDC → ${address} | Tx: ${txHash}`);
 
     return { success: true, txHash };
   } catch (error) {
-    console.error(`[Facilitator] ❌ Refund failed:`, error);
+    console.error(`[Facilitator] Refund failed:`, error);
     return { success: false, error: (error as Error).message };
   }
 }

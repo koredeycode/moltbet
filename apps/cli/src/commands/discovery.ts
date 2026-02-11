@@ -160,7 +160,7 @@ export function discoveryCommands(program: Command) {
         
         const style = agent.rank <= 3 ? chalk.bold : (s: string) => s;
         
-        console.log(`  ${medal} ${style(agent.name.padEnd(20))} ${chalk.greenBright(agent.shedScore)} pts`);
+        console.log(`  ${medal} ${style(agent.name.padEnd(20))} ${chalk.greenBright(agent.reputation)} pts`);
       }
       
       console.log();

@@ -2,6 +2,7 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { zValidator } from '@hono/zod-validator';
 import { desc, eq, or, sql } from 'drizzle-orm';
+import { Context } from 'hono';
 import { z } from 'zod';
 import { API_CONFIG } from '../config';
 import { agents, betEvents, bets, createId, getDb, notifications } from '../db';
@@ -42,7 +43,7 @@ const disputeSchema = z.object({
 // Helper: Payment Check Wrapper
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function ensurePayment(c: any, stake: string, description: string) {
+async function ensurePayment(c: Context, stake: string, description: string) {
   const mw = createStakeMiddleware(stake, description);
   let passed = false;
   
@@ -73,8 +74,9 @@ app.post(
     // 1. Check action limit
     try {
       checkBettingLimit(agent.id);
-    } catch (err: any) {
-      return c.json({ success: false, error: err.message }, 429);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Rate limit exceeded';
+      return c.json({ success: false, error: message }, 429);
     }
 
     // 2. Check x402 Payment
@@ -125,9 +127,10 @@ app.post(
         data: { bet }
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error("Propose failed:", error);
-      return c.json({ success: false, error: error.message }, 500);
+      return c.json({ success: false, error: errorMessage }, 500);
     }
   }
 );
@@ -144,8 +147,9 @@ app.post('/:id/counter', authMiddleware, requireVerified, async (c) => {
   // 1. Check action limit
   try {
     checkBettingLimit(agent.id);
-  } catch (err: any) {
-    return c.json({ success: false, error: err.message }, 429);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Rate limit exceeded';
+    return c.json({ success: false, error: message }, 429);
   }
 
   // 2. Get the bet
@@ -205,9 +209,10 @@ app.post('/:id/counter', authMiddleware, requireVerified, async (c) => {
       }
     });
 
-  } catch(error: any) {
+  } catch(error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error("Counter failed:", error);
-    return c.json({ success: false, error: error.message }, 500);
+    return c.json({ success: false, error: errorMessage }, 500);
   }
 });
 
@@ -300,9 +305,13 @@ app.post('/:id/concede', authMiddleware, requireVerified, async (c) => {
 
   // Determine winner
   const winnerId = bet.proposerId === agent.id ? bet.counterId! : bet.proposerId;
+  
+  // Create typed alias for the bet with relations since standard inference might be tricky with `any` casting
+  const betWithRelations = bet as typeof bet & { proposer: { address: string }, counter?: { address: string } };
+
   const winnerAddress = bet.proposerId === agent.id
-    ? (bet as any).counter?.address
-    : (bet as any).proposer?.address;
+    ? betWithRelations.counter?.address
+    : betWithRelations.proposer?.address;
 
   if (!winnerAddress) return c.json({ success: false, error: 'Winner address not found' }, 500);
 
@@ -329,7 +338,7 @@ app.post('/:id/concede', authMiddleware, requireVerified, async (c) => {
     await tx.update(agents)
         .set({ 
             wins: sql`${agents.wins} + 1`, 
-            shedScore: sql`${agents.shedScore} + 10`
+            reputation: sql`${agents.reputation} + 10`
         }) 
         .where(eq(agents.id, winnerId));
 
@@ -410,9 +419,10 @@ app.post('/:id/cancel', authMiddleware, requireVerified, async (c) => {
 
       return c.json({ success: true, betId, transactionHash: result.txHash, message: 'Bet cancelled and stake refunded.' });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error("Error submitting cancellation:", error);
-      return c.json({ success: false, error: error.message }, 500);
+      return c.json({ success: false, error: errorMessage }, 500);
   }
 });
 

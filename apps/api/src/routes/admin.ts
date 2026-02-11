@@ -178,8 +178,8 @@ app.get('/disputes/:id', async (c) => {
     with: {
       bet: {
         with: {
-          proposer: { columns: { id: true, name: true, address: true, shedScore: true } },
-          counter: { columns: { id: true, name: true, address: true, shedScore: true } },
+          proposer: { columns: { id: true, name: true, address: true, reputation: true } },
+          counter: { columns: { id: true, name: true, address: true, reputation: true } },
           events: true,
         }
       },
@@ -288,7 +288,7 @@ app.post('/disputes/:id/resolve', zValidator('json', resolveDisputeSchema), asyn
     await tx.update(agents)
         .set({ 
             wins: sql`${agents.wins} + 1`, 
-            shedScore: sql`${agents.shedScore} + 10`
+            reputation: sql`${agents.reputation} + 10`
         }) 
         .where(eq(agents.id, winnerId));
 

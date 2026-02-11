@@ -132,20 +132,20 @@ const generateBetData = () => {
 // --- Main ---
 
 async function main() {
-  console.log("🌱 Starting seed...");
+  console.log("Starting seed...");
 
   // 1. Clear Database
-  console.log("🧹 Clearing existing data...");
+  console.log("Clearing existing data...");
   await db.delete(schema.notifications);
   await db.delete(schema.betEvents);
   await db.delete(schema.disputes);
   await db.delete(schema.bets);
   await db.delete(schema.agents);
-  console.log("✅ Data cleared.");
+  console.log("Data cleared.");
 
   // 2. Create Agents
   // 2. Prepare Agents Data (in memory)
-  console.log("🤖 Preparing agents...");
+  console.log("Preparing agents...");
   const agentIds: string[] = [];
   const agentsMap = new Map<string, typeof agents.$inferInsert>();
 
@@ -183,7 +183,7 @@ async function main() {
       nftTokenId,
       nftTxHash,
       verifiedAt,
-      shedScore: 0, // Will update from bets
+      reputation: 0, // Will update from bets
       wins: 0,
       losses: 0,
       createdAt: new Date(Date.now() - randomInt(0, 10000000000)),
@@ -194,7 +194,7 @@ async function main() {
   }
 
   // 3. Prepare Bets & Update Agent Stats
-  console.log("🎲 Generating bets and updating stats...");
+  console.log("Generating bets and updating stats...");
   const betsData: (typeof bets.$inferInsert)[] = [];
   
   for (let i = 0; i < 200; i++) { // Increased to 200 for more data
@@ -230,7 +230,7 @@ async function main() {
 
             if (winner) {
                 winner.wins = (winner.wins || 0) + 1;
-                winner.shedScore = (winner.shedScore || 0) + 10;
+                winner.reputation = (winner.reputation || 0) + 10;
             }
             if (loser) {
                 loser.losses = (loser.losses || 0) + 1;
@@ -263,12 +263,12 @@ async function main() {
   }
 
   // 4. Insert Data
-  console.log("💾 Inserting data...");
+  console.log("Inserting data...");
   const agentsData = Array.from(agentsMap.values());
   if (agentsData.length > 0) {
       await db.insert(agents).values(agentsData);
   }
-  console.log(`✅ ${agentsData.length} Agents seeded.`);
+  console.log(`${agentsData.length} Agents seeded.`);
 
   if (betsData.length > 0) {
      const createdBets = await db.insert(bets).values(betsData).returning();
@@ -358,27 +358,27 @@ async function main() {
 
      if (disputesData.length > 0) {
          await db.insert(schema.disputes).values(disputesData);
-         console.log(`✅ ${disputesData.length} Disputes seeded.`);
+         console.log(`${disputesData.length} Disputes seeded.`);
      }
 
      if (eventsData.length > 0) {
          await db.insert(schema.betEvents).values(eventsData);
-         console.log(`✅ ${eventsData.length} Bet Events seeded.`);
+         console.log(`${eventsData.length} Bet Events seeded.`);
      }
 
      if (notificationsData.length > 0) {
          await db.insert(schema.notifications).values(notificationsData);
-         console.log(`✅ ${notificationsData.length} Notifications seeded.`);
+         console.log(`${notificationsData.length} Notifications seeded.`);
      }
   }
 
-  console.log(`✅ ${betsData.length} Bets seeded.`);
-  console.log("🌿 Seeding complete!");
+  console.log(`${betsData.length} Bets seeded.`);
+  console.log("Seeding complete!");
   process.exit(0);
 }
 
 main().catch((err) => {
-  console.error("❌ Seeding failed:");
+  console.error("Seeding failed:");
   console.error(err);
   process.exit(1);
 });

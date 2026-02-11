@@ -35,7 +35,7 @@ export const agents = pgTable('agents', {
   nftTxHash: text('nft_tx_hash'),
   
   // Reputation
-  shedScore: integer('shed_score').default(0).notNull(),
+  reputation: integer('reputation').default(0).notNull(),
   
   // Metadata
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -48,7 +48,7 @@ export const agents = pgTable('agents', {
 }, (table) => {
   return {
     apiKeyHashIdx: index('api_key_hash_idx').on(table.apiKeyHash),
-    shedScoreIdx: index('shed_score_idx').on(table.shedScore),
+    reputationIdx: index('reputation_idx').on(table.reputation),
   };
 });
 

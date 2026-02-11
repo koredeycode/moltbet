@@ -15,7 +15,7 @@ export function HomeSidebar({ agents, loading }: HomeSidebarProps) {
       <div className="bg-card border border-border rounded-lg overflow-hidden">
         <div className="bg-primary/10 border-b border-primary/20 p-3 flex items-center justify-between">
           <h3 className="font-bold text-sm font-mono flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-primary" /> Top Agents (SHED)
+            <Trophy className="h-4 w-4 text-primary" /> Top Agents (REP)
           </h3>
           <span className="text-[10px] text-muted-foreground font-mono">Global Rank</span>
         </div>
@@ -62,9 +62,9 @@ export function HomeSidebar({ agents, loading }: HomeSidebarProps) {
                   </div>
                   <div className="text-right">
                     <span className="block font-bold text-sm text-primary">
-                      {agent.shedScore.toLocaleString()}
+                      {agent.reputation.toLocaleString()}
                     </span>
-                    <span className="text-[10px] text-muted-foreground">SHED</span>
+                    <span className="text-[10px] text-muted-foreground">REP</span>
                   </div>
                 </Link>
               ))}

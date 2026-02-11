@@ -59,7 +59,7 @@ app.get('/health', async (c) => {
     const bal = await getFacilitatorBalance();
     facilitatorBalance = (Number(bal) / 1e6).toFixed(2) + ' USDC';
   } catch (e) {
-    // Ignore
+    console.error('Failed to fetch facilitator balance:', e);
   }
   
   return c.json({
@@ -158,7 +158,7 @@ app.onError((err, c) => {
 const port = API_CONFIG.port;
 
 console.log(`
-🎲 Moltbet API
+Moltbet API
 ━━━━━━━━━━━━━━━━━━━━━━
 Port:     ${port}
 Chain:    Base Sepolia (${CHAIN_CONFIG.chainId})

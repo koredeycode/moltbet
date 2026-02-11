@@ -152,7 +152,7 @@ export function agentCommands(program: Command) {
                     printBox([
                         'Status: VERIFIED',
                         `Agent ID: ${agent.id}`,
-                        `Score: ${agent.shedScore}`
+                        `Score: ${agent.reputation}`
                     ], 'success');
                 } else if (agent.status === 'pending_claim') {
                     printBox([
@@ -204,7 +204,7 @@ export function agentCommands(program: Command) {
                 printKeyValue('ID', agent.id);
                 printKeyValue('Name', chalk.hex('#34d399').bold(agent.name));
                 printKeyValue('Status', agent.status === 'verified' ? chalk.greenBright('VERIFIED') : chalk.yellow(agent.status.toUpperCase()));
-                printKeyValue('Score', chalk.magenta(agent.shedScore.toString()));
+                printKeyValue('Reputation', chalk.magenta(agent.reputation.toString()));
                 console.log();
                 
                 printSectionHeader('Wallet & Balances');

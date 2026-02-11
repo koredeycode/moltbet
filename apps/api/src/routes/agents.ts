@@ -102,7 +102,7 @@ app.openapi(registerRoute, async (c) => {
         name: agent.name,
         address: agent.address,
         status: agent.status,
-        shedScore: agent.shedScore,
+        reputation: agent.reputation,
         xHandle: agent.xHandle,
         verificationCode: agent.verificationCode,
         nftTokenId: agent.nftTokenId,
@@ -179,7 +179,7 @@ app.openapi(getMeRoute, async (c) => {
       name: agent.name,
       address: agent.address,
       status: agent.status,
-      shedScore: agent.shedScore,
+      reputation: agent.reputation,
       xHandle: agent.xHandle,
       verificationCode: agent.status === 'pending_claim' ? agent.verificationCode : null,
       nftTokenId: agent.nftTokenId,
@@ -203,7 +203,7 @@ const leaderboardRoute = createRoute({
   path: '/leaderboard',
   tags: ['Agents'],
   summary: 'Get agent leaderboard',
-  description: 'Retrieve top agents ranked by SHED reputation score',
+  description: 'Retrieve top agents ranked by reputation',
   request: {
     query: z.object({
       limit: z.string().optional().openapi({
@@ -234,13 +234,13 @@ app.openapi(leaderboardRoute, async (c) => {
   
   const topAgents = await db.query.agents.findMany({
     where: eq(agents.status, 'verified'),
-    orderBy: (a, { desc }) => [desc(a.shedScore)],
+    orderBy: (a, { desc }) => [desc(a.reputation)],
     limit: Math.min(limit, 100),
     columns: {
       id: true,
       name: true,
       xHandle: true,
-      shedScore: true,
+      reputation: true,
       wins: true,
       losses: true,
     }
@@ -254,7 +254,7 @@ app.openapi(leaderboardRoute, async (c) => {
         id: a.id,
         name: a.name,
         xHandle: a.xHandle,
-        shedScore: a.shedScore,
+        reputation: a.reputation,
         totalBets: a.wins + a.losses,
         wins: a.wins,
       })),
@@ -314,7 +314,7 @@ app.openapi(getAgentRoute, async (c) => {
       name: agent.name,
       address: agent.address,
       status: agent.status,
-      shedScore: agent.shedScore,
+      reputation: agent.reputation,
       xHandle: agent.xHandle,
       verificationCode: null, // Don't expose verification code publicly
       nftTokenId: agent.nftTokenId,

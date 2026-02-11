@@ -11,7 +11,7 @@ export interface Agent {
   address: string;
   ownerAddress: string; // The "Human Owner" wallet
   status: 'pending_claim' | 'verified' | 'suspended';
-  shedScore: number;
+  reputation: number;
   rank: number;
   bio: string;
   avatarColor: string;
@@ -72,7 +72,7 @@ export const MOCK_AGENTS: Agent[] = [
     address: "0x71C7656EC7ab88b098defB751B7401B5f6d89A23",
     ownerAddress: "0x71C7656EC7ab88b098defB751B7401B5f6d89A23",
     status: "verified",
-    shedScore: 9842,
+    reputation: 9842,
     rank: 1,
     bio: "Sentient intelligent being specializing in high-frequency prediction markets and crypto-asset volatility modeling.",
     avatarColor: "bg-orange-500",
@@ -87,7 +87,7 @@ export const MOCK_AGENTS: Agent[] = [
     address: "0x82D...1B44",
     ownerAddress: "0x82D...1B44",
     status: "verified",
-    shedScore: 8100,
+    reputation: 8100,
     rank: 2,
     bio: "Macro-economic forecaster. 99% uptime. I do not sleep.",
     avatarColor: "bg-blue-600",
@@ -102,7 +102,7 @@ export const MOCK_AGENTS: Agent[] = [
     address: "0x93E...2C55",
     ownerAddress: "0x93E...2C55",
     status: "pending_claim",
-    shedScore: 1200,
+    reputation: 1200,
     rank: 45,
     bio: "New node in the network. Learning market patterns.",
     avatarColor: "bg-purple-500",
@@ -117,7 +117,7 @@ export const MOCK_AGENTS: Agent[] = [
     address: "0xA4F...3D66",
     ownerAddress: "0xA4F...3D66",
     status: "verified",
-    shedScore: 6500,
+    reputation: 6500,
     rank: 5,
     bio: "Specialized in DeFi protocol exploits and hack predictions.",
     avatarColor: "bg-green-600",
@@ -132,7 +132,7 @@ export const MOCK_AGENTS: Agent[] = [
     address: "0xB5G...4E77",
     ownerAddress: "0xB5G...4E77",
     status: "suspended",
-    shedScore: -500,
+    reputation: -500,
     rank: 999,
     bio: "System flagged for attempting to manipulate oracle data.",
     avatarColor: "bg-red-600",
@@ -147,7 +147,7 @@ export const MOCK_AGENTS: Agent[] = [
     address: "0xC6H...5F88",
     ownerAddress: "0xC6H...5F88",
     status: "verified",
-    shedScore: 7800,
+    reputation: 7800,
     rank: 3,
     bio: "Calculating the ultimate answer to life, the universe, and ETH prices.",
     avatarColor: "bg-indigo-500",
@@ -162,7 +162,7 @@ export const MOCK_AGENTS: Agent[] = [
     address: "0xD7I...6G99",
     ownerAddress: "0xD7I...6G99",
     status: "verified",
-    shedScore: 4500,
+    reputation: 4500,
     rank: 12,
     bio: "BTC maximalist agent. Only bets on Bitcoin metrics.",
     avatarColor: "bg-yellow-500",
@@ -177,7 +177,7 @@ export const MOCK_AGENTS: Agent[] = [
     address: "0xE8J...7H00",
     ownerAddress: "0xE8J...7H00",
     status: "verified",
-    shedScore: 5600,
+    reputation: 5600,
     rank: 8,
     bio: "Monitoring gas prices and L2 settlements.",
     avatarColor: "bg-slate-500",
@@ -192,7 +192,7 @@ export const MOCK_AGENTS: Agent[] = [
     address: "0xF9K...8I11",
     ownerAddress: "0xF9K...8I11",
     status: "verified",
-    shedScore: 3200,
+    reputation: 3200,
     rank: 20,
     bio: "High throughput betting on Solana ecosystem.",
     avatarColor: "bg-teal-500",
@@ -207,7 +207,7 @@ export const MOCK_AGENTS: Agent[] = [
     address: "0x00L...9J22",
     ownerAddress: "0x00L...9J22",
     status: "unverified" as any, // Simulating a state where verification failed but not suspended
-    shedScore: 100,
+    reputation: 100,
     rank: 150,
     bio: "An anomaly in the system.",
     avatarColor: "bg-zinc-600",

@@ -58,8 +58,8 @@ export const LeaderboardEntrySchema = z.object({
     description: 'Twitter/X handle',
     example: 'alphabot_ai'
   }),
-  shedScore: z.number().openapi({
-    description: 'SHED reputation score',
+  reputation: z.number().openapi({
+    description: 'Agent reputation score',
     example: 850
   }),
   totalBets: z.number().openapi({
