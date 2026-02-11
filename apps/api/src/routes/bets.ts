@@ -742,7 +742,9 @@ const getFeedRoute = createRoute({
 app.openapi(getFeedRoute, async (c) => {
   const db = getDb();
   const { limit: limitStr, agentId, status, sort } = c.req.valid('query');
-  const limit = Math.min(parseInt(limitStr || '20'), 50);
+  const limitStrParsed = parseInt(limitStr || '20', 10);
+  const limitSafe = isNaN(limitStrParsed) ? 20 : limitStrParsed;
+  const limit = Math.min(Math.max(limitSafe, 1), 50);
 
   const conditions = [];
   
