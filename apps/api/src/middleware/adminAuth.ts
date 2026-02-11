@@ -39,7 +39,7 @@ function getJWTSecret(): Uint8Array {
 /**
  * Verify JWT token from cookie
  */
-async function verifyJWT(token: string): Promise<boolean> {
+export async function verifyJWT(token: string): Promise<boolean> {
   try {
     const { payload } = await jose.jwtVerify(token, getJWTSecret(), {
       issuer: 'moltbet-admin',

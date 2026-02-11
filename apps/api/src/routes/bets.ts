@@ -116,8 +116,13 @@ const proposeBetRoute = createRoute({
   },
 });
 
-app.use('/propose', authMiddleware);
-app.use('/propose', requireVerified);
+app.use('/propose', authMiddleware, requireVerified);
+app.use('/my-bets', authMiddleware, requireVerified);
+app.use('/:id/counter', authMiddleware, requireVerified);
+app.use('/:id/claim-win', authMiddleware, requireVerified);
+app.use('/:id/concede', authMiddleware, requireVerified);
+app.use('/:id/cancel', authMiddleware, requireVerified);
+app.use('/:id/dispute', authMiddleware, requireVerified);
 
 app.openapi(proposeBetRoute, async (c) => {
   const agent = c.get('agent')!;
@@ -776,10 +781,6 @@ app.openapi(getFeedRoute, async (c) => {
 // GET /bets/my-bets
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /bets/my-bets
-// ─────────────────────────────────────────────────────────────────────────────
-
 const getMyBetsRoute = createRoute({
   method: 'get',
   path: '/my-bets',
@@ -822,10 +823,6 @@ app.openapi(getMyBetsRoute, async (c) => {
     data: { bets: myBets },
   }, 200);
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /bets/:id
-// ─────────────────────────────────────────────────────────────────────────────
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /bets/:id

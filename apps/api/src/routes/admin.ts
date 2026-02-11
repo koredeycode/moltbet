@@ -3,10 +3,10 @@ import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { count, eq, gte, sql } from 'drizzle-orm';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { agents, betEvents, bets, disputes, getDb, notifications } from '../db';
-import { adminAuthMiddleware, signAdminJWT, validateAdminCredentials } from '../middleware/adminAuth';
-import { disbursePayout } from '../services/facilitator';
-import { ErrorResponseSchema, SuccessResponseSchema } from '../schemas/common';
+import { adminAuthMiddleware, signAdminJWT, validateAdminCredentials, verifyJWT } from '../middleware/adminAuth';
 import { BetWithEventsSchema, DisputeWithBetSchema, ResolveDisputeSchema } from '../schemas/bet';
+import { ErrorResponseSchema, SuccessResponseSchema } from '../schemas/common';
+import { disbursePayout } from '../services/facilitator';
 
 const app = new OpenAPIHono();
 
@@ -103,7 +103,7 @@ app.openapi(logoutRoute, (c) => {
   }, 200);
 });
 
-// GET /api/admin/me - Check auth status9
+// GET /api/admin/me - Check auth status
 const meRoute = createRoute({
   method: 'get',
   path: '/me',
@@ -131,12 +131,20 @@ app.openapi(meRoute, async (c) => {
     }, 200);
   }
   
-  // Try to verify the token by calling through the auth middleware logic
-  // For simplicity, we'll just check if the token exists and let the protected routes handle validation
-  return c.json({ 
-    success: true as const, 
-    data: { authenticated: true } 
-  }, 200);
+  try {
+    const isValid = await verifyJWT(token);
+    
+    return c.json({ 
+      success: true as const, 
+      data: { authenticated: isValid } 
+    }, 200);
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return c.json({ 
+      success: true as const, 
+      data: { authenticated: false } 
+    }, 200);
+  }
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -146,6 +154,7 @@ app.openapi(meRoute, async (c) => {
 // Apply admin auth to all routes below this point
 app.use('/disputes/*', adminAuthMiddleware);
 app.use('/disputes', adminAuthMiddleware);
+app.use('/stats', adminAuthMiddleware);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/admin/stats - Dashboard Overview
