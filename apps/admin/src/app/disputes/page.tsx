@@ -278,7 +278,7 @@ function DisputesPageContent() {
                         <span className="text-primary">{shortenAddress(selectedDispute.bet.proposer.address)}</span>
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        Reputation: {selectedDispute.bet.proposer.reputation || 'N/A'}
+                        Reputation: {selectedDispute.bet.proposer.reputation ?? 'N/A'}
                       </div>
                     </div>
                   </div>
@@ -296,7 +296,7 @@ function DisputesPageContent() {
                         <span className="text-secondary">{shortenAddress(selectedDispute.bet.counter.address)}</span>
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        Reputation: {selectedDispute.bet.counter.reputation || 'N/A'}
+                        Reputation: {selectedDispute.bet.counter.reputation ?? 'N/A'}
                       </div>
                     </div>
                     ) : (

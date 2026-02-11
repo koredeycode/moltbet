@@ -90,9 +90,9 @@ export const ProposeBetSchema = z.object({
       description: 'Clear, objective criteria for determining the winner',
       example: 'Winner is determined by CoinGecko BTC/USD price at 23:59:59 UTC on March 31, 2024. Price must be >= $100,000.'
     }),
-  category: z.string().optional().openapi({
+  category: z.enum(['crypto', 'sports', 'politics', 'entertainment', 'tech', 'finance', 'weather', 'custom']).optional().openapi({
     description: 'Category for organizing bets',
-    example: 'Cryptocurrency'
+    example: 'crypto'
   }),
   stake: z.string()
     .regex(/^\d+(\.\d{1,6})?$/, 'Stake must be a valid USDC amount (up to 6 decimals)')
@@ -169,8 +169,8 @@ export const BetEventSchema = z.object({
     description: 'Agent who triggered this event',
     example: 'agent2def456'
   }),
-  metadata: z.record(z.any()).nullable().openapi({
-    description: 'Additional event-specific data',
+  data: z.record(z.any()).nullable().openapi({
+    description: 'Additional event-specific data (renamed from metadata to match DB)',
     example: { evidence: 'https://example.com/proof' }
   }),
   createdAt: TimestampSchema,
@@ -180,22 +180,61 @@ export const BetEventSchema = z.object({
 // Bet with Events (for detailed view)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const BetWithEventsSchema = BetSchema.extend({
-  events: z.array(BetEventSchema).openapi({
-    description: 'Timeline of events for this bet',
-  }),
+// ─────────────────────────────────────────────────────────────────────────────
+// Bet with Actors (for lists)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const BetWithActorsSchema = BetSchema.extend({
   proposer: z.object({
     id: z.string(),
     name: z.string(),
-    xHandle: z.string().nullable(),
+    address: z.string(),
+    reputation: z.number().optional(), // Added field matching DB content
   }).openapi({
     description: 'Proposer agent details',
   }),
   counter: z.object({
     id: z.string(),
     name: z.string(),
-    xHandle: z.string().nullable(),
+    address: z.string(),
+    reputation: z.number().optional(), // Added field matching DB content
   }).nullable().openapi({
     description: 'Counter agent details',
   }),
+}).openapi('BetWithActors');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Bet with Events (for detailed view)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const BetWithEventsSchema = BetWithActorsSchema.extend({
+  events: z.array(BetEventSchema).openapi({
+    description: 'Timeline of events for this bet',
+  }),
 }).openapi('BetWithEvents');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dispute Schemas
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const DisputeWithBetSchema = z.object({
+  id: z.string(),
+  betId: z.string(),
+  raisedById: z.string(),
+  reason: z.string(),
+  evidence: z.string().optional().nullable(),
+  status: z.enum(['pending', 'resolved', 'rejected']),
+  winnerId: z.string().optional().nullable(),
+  resolution: z.string().optional().nullable(),
+  createdAt: TimestampSchema,
+  bet: BetWithActorsSchema,
+  raisedBy: z.object({
+    id: z.string(),
+    name: z.string(),
+  }),
+}).openapi('DisputeWithBet');
+
+export const ResolveDisputeSchema = z.object({
+  winnerId: z.string().min(1).openapi({ description: 'ID of the agent to be declared winner', example: 'agent123' }),
+  adminNotes: z.string().max(2000).optional().openapi({ description: 'Notes explaining the resolution', example: 'Evidence valid' }),
+}).openapi('ResolveDispute');

@@ -67,7 +67,7 @@ export function createPaymentRequirements(
 export function createStakeMiddleware(stakeUsdc: string, description: string) {
   const config = createPaymentRequirements(stakeUsdc, description);
   // Wrap in wildcard route config so it applies to the route it's attached to
-  return paymentMiddleware({ '*': config }, resourceServer);
+  return paymentMiddleware({ '*': config as any }, resourceServer);
 }
 
 export { facilitatorClient, resourceServer };

@@ -9,6 +9,7 @@ export const CHAIN_CONFIG = {
   
   // Contract addresses
   usdc: process.env.USDC_ADDRESS || '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+  identity: process.env.IDENTITY_ADDRESS || '0x', // Placeholder if not set
   
   // Block explorer
   explorer: 'https://sepolia.basescan.org',

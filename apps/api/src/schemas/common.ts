@@ -57,8 +57,7 @@ export const TransactionHashSchema = z.string()
     example: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
   });
 
-export const TimestampSchema = z.string()
-  .datetime()
+export const TimestampSchema = z.union([z.date(), z.string().datetime()])
   .openapi({
     description: 'ISO 8601 timestamp',
     example: '2024-02-10T19:14:30Z'

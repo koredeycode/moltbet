@@ -1,12 +1,12 @@
 // Admin routes for dispute resolution and moderation
-import { OpenAPIHono } from '@hono/zod-openapi';
-import { zValidator } from '@hono/zod-validator';
+import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { count, eq, gte, sql } from 'drizzle-orm';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import { z } from 'zod';
 import { agents, betEvents, bets, disputes, getDb, notifications } from '../db';
 import { adminAuthMiddleware, signAdminJWT, validateAdminCredentials } from '../middleware/adminAuth';
 import { disbursePayout } from '../services/facilitator';
+import { ErrorResponseSchema, SuccessResponseSchema } from '../schemas/common';
+import { BetWithEventsSchema, DisputeWithBetSchema, ResolveDisputeSchema } from '../schemas/bet';
 
 const app = new OpenAPIHono();
 
@@ -15,19 +15,45 @@ const app = new OpenAPIHono();
 // ─────────────────────────────────────────────────────────────────────────────
 
 const loginSchema = z.object({
-  username: z.string().min(1),
-  password: z.string().min(1),
-});
-
+  username: z.string().min(1).openapi({ example: 'admin' }),
+  password: z.string().min(1).openapi({ example: 'password123' }),
+}).openapi('AdminLogin');
 
 // POST /api/admin/login - Authenticate and get JWT cookie
-app.post('/login', zValidator('json', loginSchema), async (c) => {
+const loginRoute = createRoute({
+  method: 'post',
+  path: '/login',
+  tags: ['Admin'],
+  summary: 'Admin login',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: loginSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Login successful',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema(z.object({ message: z.string() })),
+        },
+      },
+    },
+    401: { description: 'Invalid credentials', content: { 'application/json': { schema: ErrorResponseSchema } } },
+  },
+});
+
+app.openapi(loginRoute, async (c) => {
   const { username, password } = c.req.valid('json');
   
   const valid = await validateAdminCredentials(username, password);
   
   if (!valid) {
-    return c.json({ success: false, error: 'Invalid credentials' }, 401);
+    return c.json({ success: false as const, error: 'Invalid credentials' }, 401);
   }
   
   // Generate JWT token
@@ -43,40 +69,74 @@ app.post('/login', zValidator('json', loginSchema), async (c) => {
   });
   
   return c.json({ 
-    success: true, 
+    success: true as const, 
     data: { message: 'Login successful' } 
-  });
+  }, 200);
 });
 
 // POST /api/admin/logout - Clear JWT cookie
-app.post('/logout', (c) => {
+const logoutRoute = createRoute({
+  method: 'post',
+  path: '/logout',
+  tags: ['Admin'],
+  summary: 'Admin logout',
+  responses: {
+    200: {
+      description: 'Logged out successfully',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema(z.object({ message: z.string() })),
+        },
+      },
+    },
+  },
+});
+
+app.openapi(logoutRoute, (c) => {
   deleteCookie(c, 'admin_token', {
     path: '/',
   });
   
   return c.json({ 
-    success: true, 
+    success: true as const, 
     data: { message: 'Logged out successfully' } 
-  });
+  }, 200);
 });
 
-// GET /api/admin/me - Check auth status
-app.get('/me', async (c) => {
+// GET /api/admin/me - Check auth status9
+const meRoute = createRoute({
+  method: 'get',
+  path: '/me',
+  tags: ['Admin'],
+  summary: 'Check auth status',
+  responses: {
+    200: {
+      description: 'Auth status',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema(z.object({ authenticated: z.boolean() })),
+        },
+      },
+    },
+  },
+});
+
+app.openapi(meRoute, async (c) => {
   const token = getCookie(c, 'admin_token');
   
   if (!token) {
     return c.json({ 
-      success: true, 
+      success: true as const, 
       data: { authenticated: false } 
-    });
+    }, 200);
   }
   
   // Try to verify the token by calling through the auth middleware logic
   // For simplicity, we'll just check if the token exists and let the protected routes handle validation
   return c.json({ 
-    success: true, 
+    success: true as const, 
     data: { authenticated: true } 
-  });
+  }, 200);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -90,7 +150,36 @@ app.use('/disputes', adminAuthMiddleware);
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/admin/stats - Dashboard Overview
 // ─────────────────────────────────────────────────────────────────────────────
-app.get('/stats', adminAuthMiddleware, async (c) => {
+
+const statsRoute = createRoute({
+  method: 'get',
+  path: '/stats',
+  tags: ['Admin'],
+  summary: 'Get admin stats',
+  security: [{ cookieAuth: [] }],
+  responses: {
+    200: {
+      description: 'Admin statistics',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema(z.object({ 
+            stats: z.object({
+              pendingDisputes: z.number(),
+              activeBets: z.number(),
+              verifiedAgents: z.number(),
+              protocolHealth: z.number(),
+              volume24h: z.number(),
+              newAgentsLastHour: z.number(),
+            }) 
+          })),
+        },
+      },
+    },
+    401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
+  },
+});
+
+app.openapi(statsRoute, async (c) => {
   const db = getDb();
   
   // Pending Disputes
@@ -124,7 +213,7 @@ app.get('/stats', adminAuthMiddleware, async (c) => {
     .where(gte(bets.createdAt, twentyFourHoursAgo));
     
   return c.json({
-    success: true,
+    success: true as const,
     data: {
       stats: {
         pendingDisputes: disputeStats?.count || 0,
@@ -135,14 +224,35 @@ app.get('/stats', adminAuthMiddleware, async (c) => {
         newAgentsLastHour: newAgentsStats?.count || 0,
       }
     }
-  });
+  }, 200);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/admin/disputes - List all open disputes
 // ─────────────────────────────────────────────────────────────────────────────
 
-app.get('/disputes', async (c) => {
+const getDisputesRoute = createRoute({
+  method: 'get',
+  path: '/disputes',
+  tags: ['Admin', 'Disputes'],
+  summary: 'List open disputes',
+  security: [{ cookieAuth: [] }],
+  responses: {
+    200: {
+      description: 'List of open disputes',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema(z.object({ 
+            disputes: z.array(DisputeWithBetSchema) 
+          })),
+        },
+      },
+    },
+    401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
+  },
+});
+
+app.openapi(getDisputesRoute, async (c) => {
   const db = getDb();
   
   const openDisputes = await db.query.disputes.findMany({
@@ -150,8 +260,8 @@ app.get('/disputes', async (c) => {
     with: {
       bet: {
         with: {
-          proposer: { columns: { id: true, name: true, address: true } },
-          counter: { columns: { id: true, name: true, address: true } },
+          proposer: { columns: { id: true, name: true, address: true, reputation: true } },
+          counter: { columns: { id: true, name: true, address: true, reputation: true } },
         }
       },
       raisedBy: { columns: { id: true, name: true } },
@@ -160,17 +270,44 @@ app.get('/disputes', async (c) => {
   });
   
   return c.json({
-    success: true,
+    success: true as const,
     data: { disputes: openDisputes }
-  });
+  }, 200);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/admin/disputes/:id - Get dispute details
 // ─────────────────────────────────────────────────────────────────────────────
 
-app.get('/disputes/:id', async (c) => {
-  const disputeId = c.req.param('id');
+const getDisputeByIdRoute = createRoute({
+  method: 'get',
+  path: '/disputes/:id',
+  tags: ['Admin', 'Disputes'],
+  summary: 'Get dispute details',
+  security: [{ cookieAuth: [] }],
+  request: {
+    params: z.object({ id: z.string() }),
+  },
+  responses: {
+    200: {
+      description: 'Dispute details',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema(z.object({ 
+            dispute: DisputeWithBetSchema.extend({
+              bet: BetWithEventsSchema
+            }) 
+          })),
+        },
+      },
+    },
+    404: { description: 'Dispute not found', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
+  },
+});
+
+app.openapi(getDisputeByIdRoute, async (c) => {
+  const { id: disputeId } = c.req.valid('param');
   const db = getDb();
   
   const dispute = await db.query.disputes.findFirst({
@@ -188,26 +325,60 @@ app.get('/disputes/:id', async (c) => {
   });
   
   if (!dispute) {
-    return c.json({ success: false, error: 'Dispute not found' }, 404);
+    return c.json({ success: false as const, error: 'Dispute not found' }, 404);
   }
   
   return c.json({
-    success: true,
+    success: true as const,
     data: { dispute }
-  });
+  }, 200);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/admin/disputes/:id/resolve - Resolve a dispute
 // ─────────────────────────────────────────────────────────────────────────────
 
-const resolveDisputeSchema = z.object({
-  winnerId: z.string().min(1),
-  adminNotes: z.string().max(2000).optional(),
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/admin/disputes/:id/resolve - Resolve a dispute
+// ─────────────────────────────────────────────────────────────────────────────
+
+const resolveDisputeRoute = createRoute({
+  method: 'post',
+  path: '/disputes/:id/resolve',
+  tags: ['Admin', 'Disputes'],
+  summary: 'Resolve a dispute',
+  security: [{ cookieAuth: [] }],
+  request: {
+    params: z.object({ id: z.string() }),
+    body: {
+      content: {
+        'application/json': {
+          schema: ResolveDisputeSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Dispute resolved',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema(z.object({ 
+            message: z.string(),
+            winnerId: z.string(),
+            txHash: z.string().nullable().optional()
+          })),
+        },
+      },
+    },
+    400: { description: 'Invalid request or state', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    404: { description: 'Dispute not found', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    500: { description: 'Payout failed', content: { 'application/json': { schema: ErrorResponseSchema } } },
+  },
 });
 
-app.post('/disputes/:id/resolve', zValidator('json', resolveDisputeSchema), async (c) => {
-  const disputeId = c.req.param('id');
+app.openapi(resolveDisputeRoute, async (c) => {
+  const { id: disputeId } = c.req.valid('param');
   const { winnerId, adminNotes } = c.req.valid('json');
   const db = getDb();
   
@@ -225,18 +396,18 @@ app.post('/disputes/:id/resolve', zValidator('json', resolveDisputeSchema), asyn
   });
   
   if (!dispute) {
-    return c.json({ success: false, error: 'Dispute not found' }, 404);
+    return c.json({ success: false as const, error: 'Dispute not found' }, 404);
   }
   
   if (dispute.status !== 'pending') {
-    return c.json({ success: false, error: 'Dispute already resolved' }, 400);
+    return c.json({ success: false as const, error: 'Dispute already resolved' }, 400);
   }
   
   const bet = dispute.bet;
   
   // Validate winner is a participant
   if (winnerId !== bet.proposerId && winnerId !== bet.counterId) {
-    return c.json({ success: false, error: 'Winner must be a bet participant' }, 400);
+    return c.json({ success: false as const, error: 'Winner must be a bet participant' }, 400);
   }
   
   // Get winner address
@@ -245,7 +416,7 @@ app.post('/disputes/:id/resolve', zValidator('json', resolveDisputeSchema), asyn
     : bet.counter?.address;
     
   if (!winnerAddress) {
-    return c.json({ success: false, error: 'Winner address not found' }, 500);
+    return c.json({ success: false as const, error: 'Winner address not found' }, 500);
   }
   
   // Resolve on-chain by disbursing payout
@@ -254,7 +425,7 @@ app.post('/disputes/:id/resolve', zValidator('json', resolveDisputeSchema), asyn
   
   if (!result.success) {
     return c.json({ 
-      success: false, 
+      success: false as const, 
       error: 'Payout disbursement failed', 
       details: result.error 
     }, 500);
@@ -324,13 +495,13 @@ app.post('/disputes/:id/resolve', zValidator('json', resolveDisputeSchema), asyn
   });
   
   return c.json({
-    success: true,
+    success: true as const,
     data: {
       message: 'Dispute resolved successfully',
       winnerId,
       txHash: result.txHash,
     }
-  });
+  }, 200);
 });
 
 export default app;

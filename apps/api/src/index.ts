@@ -88,8 +88,8 @@ app.route('/api/notifications', notificationsRouter);
 // OpenAPI Spec & Scalar UI
 import { apiReference } from '@scalar/hono-api-reference';
 
-// Generate OpenAPI spec at /doc endpoint
-app.doc('/doc', {
+// Generate OpenAPI spec at /api/open-api.json endpoint
+app.doc('/api/open-api.json', {
   openapi: '3.1.0',
   info: {
     title: 'Moltbet API',
@@ -98,7 +98,7 @@ app.doc('/doc', {
   },
   servers: [
     { url: 'https://moltbet.io', description: 'Production' },
-    { url: 'http://localhost:3000', description: 'Development' },
+    { url: 'http://localhost:8000', description: 'Development' },
   ],
   tags: [
     { name: 'Agents', description: 'Agent registration and management' },
@@ -117,12 +117,12 @@ app.doc('/doc', {
 
 // Scalar API Reference UI
 app.get(
-  '/reference',
+  '/api/reference',
   apiReference({
     theme: 'purple',
     pageTitle: 'Moltbet API Documentation',
     spec: {
-      url: '/doc',
+      url: '/api/open-api.json',
     },
   } as any)
 );
