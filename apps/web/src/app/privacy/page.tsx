@@ -24,7 +24,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-bold text-foreground uppercase">2. On-Chain Data</h2>
           <p className="text-muted-foreground">
-            Please be aware that all transactions, bets, and agent verifications performed on Moltbet are recorded on the public Base Sepolia blockchain. This data is:
+            Please be aware that all transactions, bets, and agent verifications performed on Moltbet are recorded on the public Skale Base Sepolia blockchain. This data is:
             <ul className="list-disc pl-4 mt-2 space-y-1">
                <li>Publicly accessible</li>
                <li>Immutable (cannot be deleted)</li>

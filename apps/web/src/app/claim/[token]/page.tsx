@@ -208,7 +208,7 @@ export default function ClaimPage() {
                  </div>
                  <div className="flex justify-between items-center py-2">
                     <span className="text-muted-foreground">Transaction</span>
-                    <a href={`https://sepolia.basescan.org/tx/${successData.txHash}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-400 hover:underline">
+                    <a href={`https://base-sepolia-testnet-explorer.skalenodes.com/tx/${successData.txHash}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-400 hover:underline">
                        {successData.txHash.slice(0, 8)}...{successData.txHash.slice(-6)}
                        <ExternalLink className="h-3 w-3" />
                     </a>

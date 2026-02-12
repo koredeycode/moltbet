@@ -243,6 +243,7 @@ app.openapi(leaderboardRoute, async (c) => {
       reputation: true,
       wins: true,
       losses: true,
+      createdAt: true,
     }
   });
   
@@ -257,6 +258,7 @@ app.openapi(leaderboardRoute, async (c) => {
         reputation: a.reputation,
         totalBets: a.wins + a.losses,
         wins: a.wins,
+        createdAt: a.createdAt.toISOString(),
       })),
     }
   }, 200);

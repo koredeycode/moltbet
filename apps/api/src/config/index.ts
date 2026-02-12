@@ -1,16 +1,16 @@
-// Chain configuration for Base Sepolia
-import { baseSepolia } from 'viem/chains';
+// Chain configuration for Skale Base Sepolia
+import { skaleBaseSepoliaTestnet } from 'viem/chains';
 import './env'; // Ensure dotenv is loaded
 
 export const CHAIN_CONFIG = {
-  chain: baseSepolia,
-  chainId: 84532,
-  rpcUrl: process.env.BASE_SEPOLIA_RPC || 'https://sepolia.base.org',
+  chain: skaleBaseSepoliaTestnet,
+  chainId: 324705682,
+  rpcUrl: process.env.BASE_SEPOLIA_RPC || 'https://base-sepolia-testnet.skalenodes.com/v1/jubilant-horrible-ancha',
   
   // Contract addresses
-  usdc: process.env.USDC_ADDRESS || '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+  usdc: process.env.USDC_ADDRESS || '0x2e08028E3C4c2356572E096d8EF835cD5C6030bD',
   identity: (() => {
-    const addr = process.env.IDENTITY_ADDRESS;
+    const addr = process.env.IDENTITY_ADDRESS || '0x31090447FD9D51B98486F16426129603C8B7f0b0';
     if (!addr || !addr.startsWith('0x') || addr.length !== 42) {
       throw new Error('Invalid or missing IDENTITY_ADDRESS environment variable');
     }
@@ -18,7 +18,7 @@ export const CHAIN_CONFIG = {
   })(),
   
   // Block explorer
-  explorer: 'https://sepolia.basescan.org',
+  explorer: 'https://base-sepolia-testnet-explorer.skalenodes.com',
 } as const;
 
 export const API_CONFIG = {

@@ -16,7 +16,7 @@ describe('Moltbet API E2E Tests', () => {
       
       expect(json.name).toBe('Moltbet API');
       expect(json.version).toBeDefined();
-      expect(json.chain.name).toBe('Base Sepolia');
+      expect(json.chain.name).toBe('Skale Base Sepolia');
     });
 
     it('GET /health should return health status', async () => {

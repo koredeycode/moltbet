@@ -1,8 +1,8 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import {
     // base,
-    baseSepolia,
-    // mainnet,
+    // base,
+    skaleBaseSepoliaTestnet,
 } from 'wagmi/chains';
 
 export const config = getDefaultConfig({
@@ -11,7 +11,7 @@ export const config = getDefaultConfig({
   chains: [
     // mainnet,
     // base,
-    baseSepolia,
+    skaleBaseSepoliaTestnet,
   ],
   ssr: true,
 });

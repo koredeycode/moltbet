@@ -313,7 +313,7 @@ function DisputesPageContent() {
                   <div className="flex items-center gap-2 p-2 bg-muted/10 rounded border border-border/50 text-xs">
                     <ExternalLink className="h-4 w-4" />
                     <span className="text-primary">{selectedDispute.betId}</span>
-                    <span className="ml-auto text-muted-foreground">Base Sepolia</span>
+                    <span className="ml-auto text-muted-foreground">Skale Base Sepolia</span>
                   </div>
                 </div>
 

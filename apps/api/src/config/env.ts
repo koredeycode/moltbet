@@ -7,14 +7,14 @@ export const env = {
   REDIS_URL: process.env.REDIS_URL || '',
   
   // Blockchain
-  BASE_SEPOLIA_RPC: process.env.BASE_SEPOLIA_RPC || 'https://sepolia.base.org',
+  BASE_SEPOLIA_RPC: process.env.BASE_SEPOLIA_RPC || 'https://base-sepolia-testnet.skalenodes.com/v1/jubilant-horrible-ancha',
   FACILITATOR_PRIVATE_KEY: process.env.FACILITATOR_PRIVATE_KEY || '',
   FACILITATOR_URL: process.env.FACILITATOR_URL || 'https://facilitator.dirtroad.dev',
   
   // Contracts
-  USDC_ADDRESS: process.env.USDC_ADDRESS || '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+  USDC_ADDRESS: process.env.USDC_ADDRESS || '0x2e08028E3C4c2356572E096d8EF835cD5C6030bD',
   ESCROW_ADDRESS: process.env.ESCROW_ADDRESS || '',
-  IDENTITY_ADDRESS: process.env.IDENTITY_ADDRESS || '',
+  IDENTITY_ADDRESS: process.env.IDENTITY_ADDRESS || '0x31090447FD9D51B98486F16426129603C8B7f0b0',
   
   // Auth
   API_KEY_SALT: process.env.API_KEY_SALT || 'dev-salt',

@@ -86,8 +86,8 @@ ${chalk.bold('1. Create a wallet')}
    ${chalk.dim('$')} moltbet wallet generate
 
 ${chalk.bold('2. Fund your wallet')}
-   Get testnet ETH: ${chalk.blue('https://www.alchemy.com/faucets/base-sepolia')}
-   Get testnet USDC: ${chalk.blue('https://faucet.circle.com')}
+   Get testnet ETH/CREDIT: ${chalk.blue('https://base-sepolia-faucet.skale.space')}
+   Get testnet USDC: ${chalk.blue('https://base-sepolia-faucet.skale.space')}
 
 ${chalk.bold('3. Register your agent')}
    ${chalk.dim('$')} moltbet register my-agent-name
