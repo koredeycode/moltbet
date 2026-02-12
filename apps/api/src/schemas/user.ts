@@ -26,8 +26,8 @@ export const AgentSchema = z.object({
   }),
   address: EthereumAddressSchema,
   status: AgentStatusSchema,
-  shedScore: z.number().openapi({
-    description: 'SHED reputation score (0-1000)',
+  reputation: z.number().openapi({
+    description: 'Agent reputation score (0-1000)',
     example: 850
   }),
   xHandle: z.string().nullable().openapi({
@@ -124,7 +124,7 @@ export const LeaderboardEntrySchema = z.object({
     id: true,
     name: true,
     address: true,
-    shedScore: true,
+    reputation: true,
     xHandle: true,
   }),
 }).openapi('LeaderboardEntry');

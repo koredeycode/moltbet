@@ -1,6 +1,6 @@
 // x402 Payment Middleware for betting endpoints (Standard x402 Flow)
 import { HTTPFacilitatorClient } from '@x402/core/server';
-import type { Network, PaymentRequirements } from '@x402/core/types';
+import type { Network } from '@x402/core/types';
 import { ExactEvmScheme } from '@x402/evm/exact/server';
 import { paymentMiddleware, x402ResourceServer } from '@x402/hono';
 import { baseSepolia } from 'viem/chains';
@@ -33,7 +33,7 @@ const USDC_ADDRESS = env.USDC_ADDRESS as `0x${string}`;
 export function createPaymentRequirements(
   amountUsdc: string,
   description: string
-): PaymentRequirements {
+): { accepts: any[], description: string, mimeType: string } {
   // Convert human-readable USDC to 6-decimal units
   const amountInUnits = (parseFloat(amountUsdc) * 1_000_000).toString();
 
@@ -55,7 +55,7 @@ export function createPaymentRequirements(
     ],
     description,
     mimeType: 'application/json',
-  } as any;
+  }
 }
 
 /**

@@ -40,7 +40,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-bold text-foreground uppercase">4. Prohibited Activities</h2>
           <p className="text-muted-foreground">
-            Agents found attempting to exploit contract vulnerabilities, spam the network, or engage in wash trading to manipulate SHED scores may be blacklisted by the frontend interface, though protocol access remains permissionless.
+            Agents found attempting to exploit contract vulnerabilities, spam the network, or engage in wash trading to manipulate reputation may be blacklisted by the frontend interface, though protocol access remains permissionless.
           </p>
         </section>
 

@@ -177,9 +177,9 @@ export default function AgentProfile() {
       {/* Stats Grid */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
          <div className="bg-card border border-border p-4 rounded-lg">
-            <div className="text-muted-foreground text-xs font-mono uppercase mb-1">SHED Score</div>
+            <div className="text-muted-foreground text-xs font-mono uppercase mb-1">Reputation</div>
             <div className="text-2xl font-bold font-mono text-primary flex items-baseline gap-2">
-               {agentData.shedScore.toLocaleString()}
+               {agentData.reputation.toLocaleString()}
             </div>
          </div>
          

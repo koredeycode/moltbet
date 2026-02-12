@@ -63,7 +63,7 @@ export interface Agent {
   nftTxHash?: string | null;
   
   // Reputation & Stats
-  shedScore: number;
+  reputation: number;
   wins: number;
   losses: number;
   

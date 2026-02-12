@@ -47,6 +47,14 @@ const getClaimRoute = createRoute({
         },
       },
     },
+    500: {
+      description: 'Server error',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
   },
 });
 
@@ -54,33 +62,38 @@ app.openapi(getClaimRoute, async (c) => {
   const { token } = c.req.valid('param');
   const db = getDb();
   
-  const agent = await db.query.agents.findFirst({
-    where: eq(agents.claimToken, token),
-  });
-  
-  if (!agent) {
-    return c.json({ success: false, error: 'Invalid claim token' }, 404);
-  }
-  
-  if (agent.claimTokenExpiresAt && new Date() > agent.claimTokenExpiresAt) {
-    return c.json({ success: false, error: 'Claim token expired' }, 400);
-  }
-  
-  return c.json({
-    success: true,
-    data: {
-      agent: {
-        id: agent.id,
-        name: agent.name,
-        address: agent.address,
-        verificationCode: agent.verificationCode,
-        status: agent.status,
-        xHandle: agent.xHandle,
-        nftTxHash: agent.nftTxHash,
-        nftTokenId: agent.nftTokenId,
-      },
+  try {
+    const agent = await db.query.agents.findFirst({
+      where: eq(agents.claimToken, token),
+    });
+    
+    if (!agent) {
+      return c.json({ success: false as const, error: 'Invalid claim token' }, 404);
     }
-  });
+    
+    if (agent.claimTokenExpiresAt && new Date() > agent.claimTokenExpiresAt) {
+      return c.json({ success: false as const, error: 'Claim token expired' }, 400);
+    }
+    
+    return c.json({
+      success: true as const,
+      data: {
+        agent: {
+          id: agent.id,
+          name: agent.name,
+          address: agent.address,
+          verificationCode: agent.verificationCode,
+          status: agent.status,
+          xHandle: agent.xHandle,
+          nftTxHash: agent.nftTxHash,
+          nftTokenId: agent.nftTokenId,
+        },
+      }
+    }, 200);
+  } catch (error) {
+    console.error('Get claim error:', error);
+    return c.json({ success: false as const, error: 'Internal server error' }, 500);
+  }
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -143,8 +156,18 @@ const verifyClaimRoute = createRoute({
         },
       },
     },
+    500: {
+      description: 'Server error',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
   },
 });
+
+app.use('/:token/verify', authLimiter);
 
 app.openapi(verifyClaimRoute, async (c) => {
   const { token } = c.req.valid('param');
@@ -156,13 +179,13 @@ app.openapi(verifyClaimRoute, async (c) => {
   });
   
   if (!agent) {
-    return c.json({ success: false, error: 'Invalid claim token' }, 404);
+    return c.json({ success: false as const, error: 'Invalid claim token' }, 404);
   }
   
   if (agent.status === 'verified') {
     // If already verified, return success immediately (idempotent)
      return c.json({
-      success: true,
+      success: true as const,
       data: {
         message: 'Agent already verified',
         txHash: agent.nftTxHash || txHash,
@@ -173,7 +196,7 @@ app.openapi(verifyClaimRoute, async (c) => {
   }
   
   if (agent.claimTokenExpiresAt && new Date() > agent.claimTokenExpiresAt) {
-    return c.json({ success: false, error: 'Claim token expired' }, 400);
+    return c.json({ success: false as const, error: 'Claim token expired' }, 400);
   }
   
   // Extract X handle and tweet ID from URL
@@ -182,19 +205,19 @@ app.openapi(verifyClaimRoute, async (c) => {
   const tweetId = matches ? matches[2] : null;
 
   if (!xHandle || !tweetId) {
-    return c.json({ success: false, error: 'Invalid tweet URL structure' }, 400);
+    return c.json({ success: false as const, error: 'Invalid tweet URL structure' }, 400);
   }
 
   // Require txHash from NFT minting
   if (!txHash) {
     return c.json({ 
-      success: false, 
+      success: false as const, 
       error: 'Please register your identity first (newAgent), then provide the transaction hash',
       minting: {
         contract: CHAIN_CONFIG.identity,
         instruction: 'Call MoltbetIdentity.newAgent(domain, address) with 0.005 ETH'
       }
-    }, 402);
+    }, 402) as any;
   }
 
   try {
@@ -212,18 +235,18 @@ app.openapi(verifyClaimRoute, async (c) => {
       .where(eq(agents.id, agent.id));
     
     return c.json({
-      success: true,
+      success: true as const,
       data: {
         message: 'Identity verified and Agent recorded',
         txHash,
         tokenId,
         xHandle,
       }
-    });
+    }) as any;
   } catch (error) {
     console.error('Verification error:', error);
-    return c.json({ success: false, error: 'Failed to verify agent' }, 500);
+    return c.json({ success: false as const, error: 'Failed to verify agent' }, 500);
   }
-}, authLimiter);
+});
 
 export default app;

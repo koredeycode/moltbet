@@ -9,6 +9,13 @@ export const CHAIN_CONFIG = {
   
   // Contract addresses
   usdc: process.env.USDC_ADDRESS || '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+  identity: (() => {
+    const addr = process.env.IDENTITY_ADDRESS;
+    if (!addr || !addr.startsWith('0x') || addr.length !== 42) {
+      throw new Error('Invalid or missing IDENTITY_ADDRESS environment variable');
+    }
+    return addr;
+  })(),
   
   // Block explorer
   explorer: 'https://sepolia.basescan.org',
