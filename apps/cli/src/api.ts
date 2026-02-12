@@ -1,9 +1,9 @@
 // API client with x402 payment integration
 import {
-    Agent,
-    ApiResponse,
-    Bet,
-    Notification
+  Agent,
+  ApiResponse,
+  Bet,
+  Notification
 } from '@moltbet/shared';
 // Types for system config
 export interface SystemConfig {
@@ -25,43 +25,28 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { getConfig, getPrivateKey } from './config';
 
 import {
-    x402HTTPClient
+  x402Client,
+  x402HTTPClient
 } from '@x402/core/client';
-import { ExactEvmScheme } from '@x402/evm/exact/client';
-import { createWalletClient, http } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { ExactEvmScheme } from '@x402/evm';
 
 // CUID generator for bet IDs (12 chars, consistent with server)
 const createId = init({ length: 12 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Client Setup (Viem + x402)
+// Client Setup (Viem + x402) - Aligned with Skale Docs "Make Payments"
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Setup Viem + x402 Client
-function getX402Client() {
+function getX402HttpClient() {
   const privateKey = getPrivateKey();
-  const config = getConfig();
-  
-  // If no wallet configured, return null (API calls might fail with 402)
   if (!privateKey) return null;
   
   const account = privateKeyToAccount(privateKey as `0x${string}`);
   
-  const walletClient = createWalletClient({
-    account,
-    chain: baseSepolia,
-    transport: http() // Uses default public RPC or configured one
-  });
-  
-  // Initialize standard x402 client with ExactEvmScheme
-  const client = new x402HTTPClient({
-    schemes: [
-      new ExactEvmScheme(walletClient as any)
-    ]
-  } as any);
-
-  return client;
+  // Create the x402 client with EVM scheme
+  const evmScheme = new ExactEvmScheme(account);
+  const coreClient = new x402Client().register("eip155:*", evmScheme);
+  return new x402HTTPClient(coreClient);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,43 +70,75 @@ async function request<T>(
   }
   
   try {
-    // Determine if we should use x402 client or standard fetch
-    const client = getX402Client();
-    let response: Response;
+    const httpClient = getX402HttpClient();
+    
+    // 1. Helper for safe JSON parsing
+    const parseResponse = async (resp: Response) => {
+      const text = await resp.text();
+      if (!text) return null;
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        return { error: 'Invalid JSON response from server' };
+      }
+    };
 
-    if (client) {
-      // Use x402 client which handles 402 responses automatically
-      // Note: x402 client fetch signature matches standard
-      response = await (client as any).fetch(url, { ...options, headers });
-    } else {
-      // Fallback to standard request (will fail on 402 if no wallet)
-      response = await fetch(url, { ...options, headers });
+    // 2. Make initial request
+    let response = await fetch(url, { ...options, headers });
+    let responseData = await parseResponse(response);
+
+    // 3. Handle 402 Payment Required
+    if (response.status === 402 && httpClient) {
+      console.log("Payment required, processing via PayAI...");
+      
+      try {
+        if (!responseData) throw new Error('Empty 402 response');
+
+        const paymentRequired = httpClient.getPaymentRequiredResponse(
+          (name: string) => response.headers.get(name),
+          responseData
+        );
+
+        // Create payment payload (signs the authorization)
+        const paymentPayload = await httpClient.createPaymentPayload(paymentRequired);
+        
+        // Get payment headers to send with retry request
+        const paymentHeaders = httpClient.encodePaymentSignatureHeader(paymentPayload);
+
+        // Retry request with payment
+        response = await fetch(url, {
+          ...options,
+          headers: { ...headers, ...paymentHeaders }
+        });
+        
+        responseData = await parseResponse(response);
+      } catch (payErr) {
+        return {
+          error: payErr instanceof Error ? payErr.message : 'Payment processing failed',
+          status: 402
+        };
+      }
     }
     
-    // If somehow 402 returned and wasn't handled (e.g. no wallet), return error
-    if (response.status === 402) {
-      return {
-        error: 'Payment Required. Please configure your wallet: moltbet wallet generate',
-        status: 402,
-      };
-    }
-    
-    const responseData = await response.json();
-
+    // 4. Handle final response errors
     if (!response.ok) {
+      const error = responseData?.error;
+      const errorMsg = typeof error === 'object' ? JSON.stringify(error, null, 2) : (error || `HTTP ${response.status}`);
+      
       return {
-        error: typeof responseData.error === 'object' ? JSON.stringify(responseData.error, null, 2) : (responseData.error || `HTTP ${response.status}`),
+        error: errorMsg,
         status: response.status,
       };
     }
 
-    // Unwrap standardized response format: { success: true, data: T }
-    let finalData = responseData;
+    // 5. Unwrap standardized response format: { success: true, data: T }
+    let data = responseData;
     if (responseData && typeof responseData === 'object' && 'success' in responseData && 'data' in responseData) {
-      finalData = responseData.data;
+      data = responseData.data;
     }
     
-    return { data: finalData, status: response.status };
+    return { data, status: response.status };
+
   } catch (err) {
     return {
       error: err instanceof Error ? err.message : 'Network error',
@@ -216,7 +233,7 @@ export const api = {
       { method: 'POST', body: JSON.stringify({ reason, evidence }) }
     );
   },
-
+ 
   async disputeResponse(disputeId: string, reason: string, evidence?: string) {
     return request<{ success: boolean; message: string }>(
       `/disputes/${disputeId}/respond`,
@@ -264,11 +281,11 @@ export const api = {
       { method: 'POST' }
     );
   },
-
+ 
   // ─────────────────────────────────────────────────────────────────────────
   // System Config
   // ─────────────────────────────────────────────────────────────────────────
-
+ 
   async getSystemConfig() {
     return request<{ config: SystemConfig }>('/config');
   },

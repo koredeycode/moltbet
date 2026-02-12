@@ -5,7 +5,7 @@ import './env'; // Ensure dotenv is loaded
 export const CHAIN_CONFIG = {
   chain: skaleBaseSepoliaTestnet,
   chainId: 324705682,
-  rpcUrl: process.env.BASE_SEPOLIA_RPC || 'https://base-sepolia-testnet.skalenodes.com/v1/jubilant-horrible-ancha',
+  rpcUrl: 'https://base-sepolia-testnet.skalenodes.com/v1/jubilant-horrible-ancha',
   
   // Contract addresses
   usdc: process.env.USDC_ADDRESS || '0x2e08028E3C4c2356572E096d8EF835cD5C6030bD',

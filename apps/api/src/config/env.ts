@@ -9,7 +9,9 @@ export const env = {
   // Blockchain
   BASE_SEPOLIA_RPC: process.env.BASE_SEPOLIA_RPC || 'https://base-sepolia-testnet.skalenodes.com/v1/jubilant-horrible-ancha',
   FACILITATOR_PRIVATE_KEY: process.env.FACILITATOR_PRIVATE_KEY || '',
-  FACILITATOR_URL: process.env.FACILITATOR_URL || 'https://facilitator.dirtroad.dev',
+  FACILITATOR_URL: process.env.FACILITATOR_URL || 'https://facilitator.payai.network',
+  RECEIVING_ADDRESS: process.env.RECEIVING_ADDRESS || '',
+  NETWORK_CHAIN_ID: process.env.NETWORK_CHAIN_ID || '324705682',
   
   // Contracts
   USDC_ADDRESS: process.env.USDC_ADDRESS || '0x2e08028E3C4c2356572E096d8EF835cD5C6030bD',

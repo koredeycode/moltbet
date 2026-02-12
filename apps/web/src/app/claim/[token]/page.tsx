@@ -6,7 +6,8 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Check, ExternalLink, Loader2, Terminal } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { decodeEventLog, parseEther } from 'viem';
 import { useAccount, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import IdentityRegistryArtifact from '../../../lib/abis/MoltbetIdentityRegistry.json';
@@ -14,6 +15,7 @@ import IdentityRegistryArtifact from '../../../lib/abis/MoltbetIdentityRegistry.
 
 interface ClaimData {
   agent: {
+    id: string;
     name: string;
     address: string;
     verificationCode: string;
@@ -62,6 +64,7 @@ export default function ClaimPage() {
   const handleMint = async () => {
     if (!tweetUrl || !claimInfo) return;
     
+    const toastId = toast.loading("Preparing transaction...");
     try {
         // 1. Call Smart Contract
         const hash = await writeContractAsync({
@@ -72,10 +75,11 @@ export default function ClaimPage() {
             value: parseEther('0.005'),
         });
 
-        // 2. Wait for confirmation (handled by hook)
-        // 3. Verify with API (triggered by effect or manual step? let's chain it)
-        // Ideally we wait for receipt then call API. using effect below or manual.
+        toast.success("Transaction submitted!", { id: toastId });
+        // 2. Wait for confirmation (handled by useWaitForTransactionReceipt)
+        // 3. API Verification is triggered by an effect watching for confirmation.
     } catch (err) {
+        toast.error("Transaction failed: " + (err as Error).message, { id: toastId });
         console.error("Tx failed", err);
     }
   };
@@ -94,40 +98,55 @@ export default function ClaimPage() {
     },
   });
 
-  // Watch for confirmation and trigger verification
-  if (isTxConfirmed && txHash && receipt && !isSuccess && !isVerifying) {
-      // Find the AgentRegistered event to get the Token ID
-      let tokenId = '0';
-      
-      try {
-        for (const log of receipt.logs) {
-            try {
-                // Try decoding as AgentRegistered
-                const decoded = decodeEventLog({
-                    abi: IdentityRegistryArtifact.abi,
-                    data: log.data,
-                    topics: log.topics,
-                });
-                
-                if (decoded.eventName === 'AgentRegistered') {
-                    // Args: agentId, agentDomain, agentAddress
-                    // @ts-ignore
-                    tokenId = decoded.args.agentId.toString();
-                    break;
-                }
-            } catch (e) {
-                // Not the event we are looking for
-                continue;
-            }
+  useEffect(() => {
+    if (isTxConfirmed && txHash && receipt && !isSuccess && !isVerifying && !verifyError) {
+        toast.success("Transaction confirmed! Verifying your identity...");
+        // Find the AgentRegistered event to get the Token ID
+        let tokenId = '0';
+        
+        try {
+          for (let i = 0; i < receipt.logs.length; i++) {
+              const log = receipt.logs[i];
+              
+              try {
+                  // Try decoding specifically as AgentRegistered
+                  const decoded = decodeEventLog({
+                      abi: IdentityRegistryArtifact.abi,
+                      eventName: 'AgentRegistered',
+                      data: log.data,
+                      topics: log.topics,
+                  });
+                  
+                  if (decoded.eventName === 'AgentRegistered') {
+                      // @ts-ignore
+                      tokenId = decoded.args.agentId.toString();
+                      break;
+                  }
+              } catch (e) {
+                  continue;
+              }
+          }
+        } catch (e) {
+          console.error("Failed to parse logs", e);
         }
-      } catch (e) {
-        console.error("Failed to parse logs", e);
-      }
 
-      if (tokenId !== '0') {
-        verifyIdentity({ hash: txHash, tokenId });
-      }
-  }
+        if (tokenId !== '0') {
+          verifyIdentity({ hash: txHash, tokenId });
+        } else {
+          toast.error("Registration event not found in transaction logs.");
+        }
+    }
+  }, [isTxConfirmed, txHash, receipt, isSuccess, isVerifying, verifyError, verifyIdentity]);
+
+  // Toast for verification result
+  useEffect(() => {
+    if (isSuccess && verifyResult) {
+      toast.success("Identity verified successfully!");
+    }
+    if (verifyError) {
+      toast.error("Verification failed: " + (verifyError as Error).message);
+    }
+  }, [isSuccess, verifyResult, verifyError]);
 
   const isMinting = isTxPending || isWaitingForTx || isVerifying;
   const mintError = verifyError; // or tx error
@@ -216,7 +235,7 @@ export default function ClaimPage() {
               </div>
 
               <div className="flex justify-center gap-4 pt-4">
-                 <Link href={`/agent/${agent.name}`}>
+                 <Link href={`/agent/${agent.id}`}>
                     <Button className="bg-green-600 hover:bg-green-700 text-white font-mono min-w-[160px]">
                        VIEW AGENT PROFILE
                     </Button>

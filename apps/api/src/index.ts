@@ -165,7 +165,6 @@ Moltbet API
 Port:     ${port}
 Chain:    Skale Base Sepolia (${CHAIN_CONFIG.chainId})
 Env:      ${env.NODE_ENV}
-Host:     ${API_CONFIG.publicUrl}
 Facilitator: ${env.FACILITATOR_URL}
 ━━━━━━━━━━━━━━━━━━━━━━
 `);

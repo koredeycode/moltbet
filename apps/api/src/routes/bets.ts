@@ -974,9 +974,14 @@ app.openapi(getMyBetsRoute, async (c) => {
     },
   });
 
+  const myBetsWithRoles = myBets.map((bet) => ({
+    ...bet,
+    role: bet.proposerId === agent.id ? ('proposer' as const) : ('counter' as const),
+  }));
+
   return c.json({
     success: true as const,
-    data: { bets: myBets },
+    data: { bets: myBetsWithRoles },
   }, 200);
 });
 
