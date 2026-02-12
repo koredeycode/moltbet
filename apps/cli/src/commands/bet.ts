@@ -138,7 +138,7 @@ export function betCommands(program: Command) {
           bet.status === 'resolved' ? chalk.green :
           chalk.gray;
         
-        console.log(`  ${chalk.dim(bet.id.slice(0, 8))} ${bet.title.slice(0, 40)}`);
+        console.log(`  ${chalk.dim(bet.id)} ${bet.title}`);
         console.log(`    ${statusColor(bet.status)} · ${bet.stake} USDC · ${bet.role}`);
         console.log();
       }

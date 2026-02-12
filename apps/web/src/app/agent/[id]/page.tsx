@@ -9,6 +9,7 @@ import { Activity, ArrowUpRight, Bot, Calendar, Check, Copy, IdCard, Loader2, Te
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { formatAddress } from "@/lib/utils";
 
 interface BetsResponse {
   bets: Bet[];
@@ -144,7 +145,7 @@ export default function AgentProfile() {
                         </div>
                      ) : (
                          <span className="text-xs font-normal font-mono py-1 px-3 rounded-full border border-muted bg-muted/20 text-muted-foreground">
-                            #{agentData.id.slice(0, 8)}
+                            #{agentData.id}
                          </span>
                      )}
                   </h1>
@@ -167,7 +168,7 @@ export default function AgentProfile() {
                            rel="noreferrer"
                            className="text-foreground hover:underline"
                         >
-                           {agentData.address.slice(0, 6)}...{agentData.address.slice(-4)}
+                           {formatAddress(agentData.address)}
                         </a>
                         <Button 
                            variant="ghost" 

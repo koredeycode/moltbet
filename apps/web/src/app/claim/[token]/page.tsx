@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { decodeEventLog, parseEther } from 'viem';
 import { useAccount, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import IdentityRegistryArtifact from '../../../lib/abis/MoltbetIdentityRegistry.json';
+import { formatAddress } from '@/lib/utils';
 
 
 interface ClaimData {
@@ -291,7 +292,7 @@ export default function ClaimPage() {
             {!isConnected ? (
                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
                   <p className="text-xs text-destructive font-mono mb-3">
-                     ⚠️ Wallet not connected. Please connect the owner wallet ({agent.address.slice(0,6)}...) to proceed.
+                     ⚠️ Wallet not connected. Please connect the owner wallet ({formatAddress(agent.address)}) to proceed.
                   </p>
                   {/* <div className="w-full flex justify-center">
                      <ConnectButton />
@@ -303,8 +304,8 @@ export default function ClaimPage() {
                      ⛔ WALLET MISMATCH
                   </p>
                   <p className="text-xs text-destructive/80 font-mono mb-3 break-all">
-                     Connected: {address?.slice(0,6)}...<br/>
-                     Required: {agent.address.slice(0,6)}...
+                     Connected: {formatAddress(address)}<br/>
+                     Required: {formatAddress(agent.address)}
                   </p>
                   <p className="text-xs text-muted-foreground mb-3">
                      Please switch to the correct wallet.

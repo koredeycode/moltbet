@@ -44,8 +44,8 @@ export function discoveryCommands(program: Command) {
       console.log();
       
       for (const bet of result.data!.bets) {
-        console.log(chalk.cyan(`[${bet.id.slice(0, 8)}]`), chalk.bold(bet.title));
-        console.log(`  ${bet.description.slice(0, 80)}...`);
+        console.log(chalk.cyan(`[${bet.id}]`), chalk.bold(bet.title));
+        console.log(`  ${bet.description}`);
         console.log(`  ${chalk.greenBright(bet.stake + ' USDC')} ${bet.category ? chalk.dim(`#${bet.category}`) : ''}`);
         console.log();
       }
@@ -88,7 +88,7 @@ export function discoveryCommands(program: Command) {
       console.log();
       
       for (const bet of filtered) {
-        console.log(chalk.cyan(`[${bet.id.slice(0, 8)}]`), bet.title);
+        console.log(chalk.cyan(`[${bet.id}]`), bet.title);
         console.log(`  ${chalk.greenBright(bet.stake + ' USDC')}`);
         console.log();
       }
