@@ -72,7 +72,6 @@ export async function getAgents(limit = 10): Promise<Agent[]> {
 }
 
 export async function getBets(params: { status?: string; sort?: string; limit?: number; agentId?: string; cursor?: string } = {}): Promise<{ bets: Bet[]; nextCursor: string | null }> {
-  try {
     const query = new URLSearchParams();
     if (params.status) query.set('status', params.status);
     if (params.sort) query.set('sort', params.sort);
@@ -92,10 +91,6 @@ export async function getBets(params: { status?: string; sort?: string; limit?: 
     }));
     
     return { bets, nextCursor: json.data.nextCursor };
-  } catch (err) {
-    console.error("Failed to fetch bets:", err);
-    return { bets: [], nextCursor: null };
-  }
 }
 
 
