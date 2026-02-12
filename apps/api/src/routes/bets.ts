@@ -1,6 +1,6 @@
 // Betting routes with x402 payment integration
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
-import { desc, eq, or, sql } from 'drizzle-orm';
+import { and, desc, eq, or, sql } from 'drizzle-orm';
 import { Context } from 'hono';
 import { API_CONFIG } from '../config';
 import { agents, betEvents, bets, createId, getDb, notifications } from '../db';
@@ -719,10 +719,6 @@ app.openapi(disputeBetRoute, async (c) => {
 // GET /bets/feed - Browse open bets
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /bets/feed - Browse open bets
-// ─────────────────────────────────────────────────────────────────────────────
-
 const getFeedRoute = createRoute({
   method: 'get',
   path: '/feed',
@@ -735,6 +731,7 @@ const getFeedRoute = createRoute({
       agentId: z.string().optional().openapi({ description: 'Filter by agent ID (proposer or counter)' }),
       status: z.enum(['open', 'countered', 'win_claimed', 'disputed', 'resolved', 'cancelled', 'all']).optional().openapi({ description: 'Filter by bet status' }),
       sort: z.enum(['newest', 'high_stakes']).optional().openapi({ description: 'Sort order' }),
+      cursor: z.string().optional().openapi({ description: 'Pagination cursor' }), // Added cursor
     }),
   },
   responses: {
@@ -743,7 +740,8 @@ const getFeedRoute = createRoute({
       content: {
         'application/json': {
           schema: SuccessResponseSchema(z.object({ 
-            bets: z.array(BetWithActorsSchema) 
+            bets: z.array(BetWithActorsSchema),
+            nextCursor: z.string().nullable().optional() // Added nextCursor
           })),
         },
       },
@@ -754,7 +752,7 @@ const getFeedRoute = createRoute({
 
 app.openapi(getFeedRoute, async (c) => {
   const db = getDb();
-  const { limit: limitStr, agentId, status, sort } = c.req.valid('query');
+  const { limit: limitStr, agentId, status, sort, cursor } = c.req.valid('query');
   const limitStrParsed = parseInt(limitStr || '20', 10);
   const limitSafe = isNaN(limitStrParsed) ? 20 : limitStrParsed;
   const limit = Math.min(Math.max(limitSafe, 1), 50);
@@ -771,14 +769,55 @@ app.openapi(getFeedRoute, async (c) => {
       if (!agentId) conditions.push(eq(bets.status, 'open'));
   }
 
+  // Cursor decoding
+  if (cursor) {
+      try {
+          const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8'));
+          const { val, id } = decoded;
+
+          if (sort === 'high_stakes') {
+               // For high stakes, we sort by stake descending
+               // condition: (stake < val) OR (stake = val AND id < id)
+               conditions.push(
+                   or(
+                       sql`CAST(${bets.stake} AS FLOAT) < ${parseFloat(val)}`,
+                       and(
+                           sql`CAST(${bets.stake} AS FLOAT) = ${parseFloat(val)}`,
+                           sql`${bets.id} < ${id}`
+                       )
+                   )
+               );
+          } else {
+               // Default: newest (createdAt desc)
+               // condition: (createdAt < val) OR (createdAt = val AND id < id)
+               conditions.push(
+                   or(
+                       sql`${bets.createdAt} < ${new Date(val).toISOString()}`,
+                       and(
+                           eq(bets.createdAt, new Date(val)),
+                           sql`${bets.id} < ${id}`
+                       )
+                   )
+               );
+          }
+      } catch (e) {
+          // invalid cursor, ignore or could throw 400
+          console.error("Invalid cursor", e);
+      }
+  }
+
   let orderBy = desc(bets.createdAt);
   if (sort === 'high_stakes') {
-      orderBy = desc(sql`CAST(${bets.stake} AS FLOAT)`); 
+      // Primary sort by stake, secondary by ID for stable pagination
+      orderBy = sql`CAST(${bets.stake} AS FLOAT) DESC, ${bets.id} DESC`; 
+  } else {
+      // Primary sort by createdAt, secondary by ID
+      orderBy = sql`${bets.createdAt} DESC, ${bets.id} DESC`;
   }
 
   const results = await db.query.bets.findMany({
     where: conditions.length ? sql`${sql.join(conditions, sql` AND `)}` : undefined,
-    limit,
+    limit: limit + 1, // Fetch one extra to determine if there is a next page
     orderBy,
     with: {
       proposer: true,
@@ -786,9 +825,23 @@ app.openapi(getFeedRoute, async (c) => {
     },
   });
 
+  let nextCursor: string | null = null;
+  if (results.length > limit) {
+      const nextItem = results.pop(); // Remove the extra item
+      const lastItem = results[results.length - 1];
+      
+      if (lastItem) {
+          const val = sort === 'high_stakes' ? lastItem.stake : lastItem.createdAt;
+          nextCursor = Buffer.from(JSON.stringify({ val, id: lastItem.id })).toString('base64');
+      }
+  }
+
   return c.json({
     success: true as const,
-    data: { bets: results },
+    data: { 
+        bets: results,
+        nextCursor
+    },
   }, 200);
 });
 

@@ -22,8 +22,11 @@ export default function AgentProfile() {
 
   const { data: agentBets = [] } = useQuery({
     queryKey: ['agent-bets', agentId],
-    queryFn: () => getBets({ agentId, status: 'all', limit: 50 }),
-    enabled: !!agentId && !!agentData // Only fetch bets if agent exists? or just parallel
+    queryFn: async () => {
+        const result = await getBets({ agentId, status: 'all', limit: 50 });
+        return result.bets;
+    },
+    enabled: !!agentId && !!agentData 
   });
   
   const [copied, setCopied] = useState(false);
