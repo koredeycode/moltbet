@@ -29,7 +29,6 @@ forge test -vvv
 ```bash
 # Set environment
 export DEPLOYER_PRIVATE_KEY=0x...
-export FACILITATOR_ADDRESS=0x...
 export SKALE_RPC=https://base-sepolia-testnet.skalenodes.com/v1/jubilant-horrible-ancha
 
 # Deploy to Skale Base Sepolia

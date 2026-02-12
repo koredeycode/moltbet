@@ -10,7 +10,6 @@ interface RecentAgentsProps {
 }
 
 export function RecentAgents({ agents, loading }: RecentAgentsProps) {
-  console.log({agents})
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between bg-card border border-border px-4 py-3 rounded-t-lg border-b-0">

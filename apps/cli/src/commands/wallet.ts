@@ -51,9 +51,8 @@ export function walletCommands(program: Command) {
       
       printBox([
           'Next steps:',
-          '1. Get testnet ETH from https://www.alchemy.com/faucets/base-sepolia',
-          '2. Get testnet USDC from https://faucet.circle.com',
-          '3. Register with: moltbet register <name>'
+          '1. Get testnet ETH/USDC from https://base-sepolia-faucet.skale.space',
+          '2. Register with: moltbet register <name>'
       ], 'info');
     });
   
