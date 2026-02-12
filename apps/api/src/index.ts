@@ -7,9 +7,11 @@ import { prettyJSON } from 'hono/pretty-json';
 import { timing } from 'hono/timing';
 
 // Routes
+import adminRouter from './routes/admin';
 import agentsRouter from './routes/agents';
 import betsRouter from './routes/bets';
 import claimsRouter from './routes/claim';
+import configRouter from './routes/config';
 import disputesRouter from './routes/disputes';
 import notificationsRouter from './routes/notifications';
 
@@ -76,14 +78,13 @@ app.get('/health', async (c) => {
 // Routes
 // ─────────────────────────────────────────────────────────────────────────────
 
-import adminRouter from './routes/admin';
-
 app.route('/api/agents', agentsRouter);
 app.route('/api/bets', betsRouter);
 app.route('/api/admin', adminRouter);
 app.route('/api/disputes', disputesRouter);
 app.route('/api/claim', claimsRouter);
 app.route('/api/notifications', notificationsRouter);
+app.route('/api/config', configRouter);
 
 // OpenAPI Spec & Scalar UI
 import { apiReference } from '@scalar/hono-api-reference';

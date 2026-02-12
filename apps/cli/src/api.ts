@@ -1,16 +1,31 @@
 // API client with x402 payment integration
 import {
-  Agent,
-  ApiResponse,
-  Bet,
-  Notification
+    Agent,
+    ApiResponse,
+    Bet,
+    Notification
 } from '@moltbet/shared';
+// Types for system config
+export interface SystemConfig {
+  chainId: number;
+  rpcUrl: string;
+  contracts: {
+    usdc: string;
+    identity: string;
+  };
+  explorer: string;
+  betting: {
+    expiryDefaultHours: number;
+    categories: string[];
+  };
+}
+
 import { init } from '@paralleldrive/cuid2';
 import { privateKeyToAccount } from 'viem/accounts';
 import { getConfig, getPrivateKey } from './config';
 
 import {
-  x402HTTPClient
+    x402HTTPClient
 } from '@x402/core/client';
 import { ExactEvmScheme } from '@x402/evm/exact/client';
 import { createWalletClient, http } from 'viem';
@@ -42,9 +57,9 @@ function getX402Client() {
   // Initialize standard x402 client with ExactEvmScheme
   const client = new x402HTTPClient({
     schemes: [
-      new ExactEvmScheme(walletClient)
+      new ExactEvmScheme(walletClient as any)
     ]
-  });
+  } as any);
 
   return client;
 }
@@ -77,7 +92,7 @@ async function request<T>(
     if (client) {
       // Use x402 client which handles 402 responses automatically
       // Note: x402 client fetch signature matches standard
-      response = await client.fetch(url, { ...options, headers });
+      response = await (client as any).fetch(url, { ...options, headers });
     } else {
       // Fallback to standard request (will fail on 402 if no wallet)
       response = await fetch(url, { ...options, headers });
@@ -248,5 +263,13 @@ export const api = {
       `/notifications/${notificationId}/read`,
       { method: 'POST' }
     );
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // System Config
+  // ─────────────────────────────────────────────────────────────────────────
+
+  async getSystemConfig() {
+    return request<{ config: SystemConfig }>('/config');
   },
 };

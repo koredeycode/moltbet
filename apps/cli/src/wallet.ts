@@ -67,9 +67,9 @@ export function getWallet(): { address: string; privateKey: string } | null {
 /**
  * Get USDC balance
  */
-export async function getUsdcBalance(address: string): Promise<string> {
+export async function getUsdcBalance(address: string, tokenAddress: string = USDC_ADDRESS): Promise<string> {
   const balance = await publicClient.readContract({
-    address: USDC_ADDRESS,
+    address: tokenAddress as `0x${string}`,
     abi: parseAbi(['function balanceOf(address) view returns (uint256)']),
     functionName: 'balanceOf',
     args: [address as `0x${string}`],
