@@ -1,6 +1,6 @@
 // Admin routes for dispute resolution and moderation
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
-import { count, eq, gte, sql } from 'drizzle-orm';
+import { and, count, eq, gte, sql } from 'drizzle-orm';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { agents, betEvents, bets, disputes, getDb, notifications } from '../db';
 import { adminAuthMiddleware, signAdminJWT, validateAdminCredentials, verifyJWT } from '../middleware/adminAuth';
@@ -382,6 +382,7 @@ const resolveDisputeRoute = createRoute({
     },
     400: { description: 'Invalid request or state', content: { 'application/json': { schema: ErrorResponseSchema } } },
     404: { description: 'Dispute not found', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    409: { description: 'Concurrent modification', content: { 'application/json': { schema: ErrorResponseSchema } } },
     500: { description: 'Payout failed', content: { 'application/json': { schema: ErrorResponseSchema } } },
   },
 });
@@ -430,10 +431,15 @@ app.openapi(resolveDisputeRoute, async (c) => {
   
   // Phase 1: Lock the dispute/bet (Update status to 'resolving')
   try {
-      await db.update(disputes).set({
+      const { rowCount } = await db.update(disputes).set({
         status: 'resolving' as any,
         updatedAt: new Date(),
-      }).where(eq(disputes.id, disputeId));
+      })
+      .where(and(eq(disputes.id, disputeId), eq(disputes.status, 'pending')));
+
+      if (rowCount === 0) {
+        return c.json({ success: false as const, error: 'Dispute concurrent modification or invalid state' }, 409);
+      }
   } catch (error) {
        console.error("Failed to lock dispute for resolution:", error);
        return c.json({ success: false as const, error: 'Database error' }, 500);
@@ -445,10 +451,15 @@ app.openapi(resolveDisputeRoute, async (c) => {
   
   if (!result.success) {
     // Rollback: Revert status to 'pending'
-    await db.update(disputes).set({
-        status: 'pending',
-        updatedAt: new Date(),
-    }).where(eq(disputes.id, disputeId));
+    try {
+        await db.update(disputes).set({
+            status: 'pending',
+            updatedAt: new Date(),
+        }).where(eq(disputes.id, disputeId));
+    } catch (rollbackError) {
+        console.error(`CRITICAL: Failed to rollback dispute ${disputeId} after payout failure. Error:`, rollbackError);
+        // Continue to return error to client
+    }
 
     return c.json({ 
       success: false as const, 

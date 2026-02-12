@@ -428,6 +428,7 @@ const concedeBetRoute = createRoute({
     400: { description: 'Invalid bet state', content: { 'application/json': { schema: ErrorResponseSchema } } },
     403: { description: 'Not a participant', content: { 'application/json': { schema: ErrorResponseSchema } } },
     404: { description: 'Bet not found', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    409: { description: 'Concurrent modification', content: { 'application/json': { schema: ErrorResponseSchema } } },
     500: { description: 'Payout failed', content: { 'application/json': { schema: ErrorResponseSchema } } },
   },
 });
@@ -464,13 +465,17 @@ app.openapi(concedeBetRoute, async (c) => {
 
   // Phase 1: Lock the bet (Update status to 'resolving')
   try {
-      // We explicitly cast 'resolving' because strict type checking might not pick up the schema change immediately 
-      // without regenerating drizzle types, but runtime it's fine if the DB migration ran.
-      // Assuming enum allows it now.
-      await db.update(bets).set({
+      const { rowCount } = await db.update(bets).set({
         status: 'resolving' as any, 
         updatedAt: new Date(),
-      }).where(eq(bets.id, betId));
+      }).where(and(
+          eq(bets.id, betId),
+          or(eq(bets.status, 'countered'), eq(bets.status, 'win_claimed'))
+      ));
+
+      if (rowCount === 0) {
+        return c.json({ success: false as const, error: 'Bet concurrent modification or invalid state' }, 409);
+      }
   } catch (error) {
        console.error("Failed to lock bet for resolution:", error);
        return c.json({ success: false as const, error: 'Database error' }, 500);
@@ -482,10 +487,14 @@ app.openapi(concedeBetRoute, async (c) => {
 
   if (!result.success) {
     // Rollback: Revert status to previous state
-    await db.update(bets).set({
-        status: bet.status, // Revert to previous status (countered or win_claimed)
-        updatedAt: new Date(),
-    }).where(eq(bets.id, betId));
+    try {
+        await db.update(bets).set({
+            status: bet.status, // Revert to previous status (countered or win_claimed)
+            updatedAt: new Date(),
+        }).where(eq(bets.id, betId));
+    } catch (rollbackError) {
+         console.error(`CRITICAL: Failed to rollback bet ${betId} after payout failure. Error:`, rollbackError);
+    }
 
     return c.json({ success: false as const, error: 'Payout failed', details: result.error }, 500);
   }
@@ -591,6 +600,7 @@ const cancelBetRoute = createRoute({
     400: { description: 'Invalid bet state', content: { 'application/json': { schema: ErrorResponseSchema } } },
     403: { description: 'Only proposer can cancel', content: { 'application/json': { schema: ErrorResponseSchema } } },
     404: { description: 'Bet not found', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    409: { description: 'Concurrent modification', content: { 'application/json': { schema: ErrorResponseSchema } } },
     500: { description: 'Refund failed', content: { 'application/json': { schema: ErrorResponseSchema } } },
   },
 });
@@ -625,10 +635,14 @@ app.openapi(cancelBetRoute, async (c) => {
 
   if (!result.success) {
       // Rollback: Revert status to 'open' if refund fails
-      await db.update(bets).set({
-        status: 'open',
-        updatedAt: new Date(),
-      }).where(eq(bets.id, betId));
+      try {
+          await db.update(bets).set({
+            status: 'open',
+            updatedAt: new Date(),
+          }).where(eq(bets.id, betId));
+      } catch (rollbackError) {
+          console.error(`CRITICAL: Failed to rollback bet ${betId} cancellation after refund failure. Error:`, rollbackError);
+      }
       
       return c.json({ success: false as const, error: 'Refund failed', details: result.error }, 500);
   }
@@ -834,9 +848,9 @@ app.openapi(getFeedRoute, async (c) => {
                // condition: (stake < val) OR (stake = val AND id < id)
                conditions.push(
                    or(
-                       sql`CAST(${bets.stake} AS FLOAT) < ${parseFloat(val)}`,
+                       sql`CAST(${bets.stake} AS DECIMAL) < ${parseFloat(val)}`,
                        and(
-                           sql`CAST(${bets.stake} AS FLOAT) = ${parseFloat(val)}`,
+                           sql`CAST(${bets.stake} AS DECIMAL) = ${parseFloat(val)}`,
                            sql`${bets.id} < ${id}`
                        )
                    )
@@ -863,7 +877,7 @@ app.openapi(getFeedRoute, async (c) => {
   let orderBy = desc(bets.createdAt);
   if (sort === 'high_stakes') {
       // Primary sort by stake, secondary by ID for stable pagination
-      orderBy = sql`CAST(${bets.stake} AS FLOAT) DESC, ${bets.id} DESC`; 
+      orderBy = sql`CAST(${bets.stake} AS DECIMAL) DESC, ${bets.id} DESC`; 
   } else {
       // Primary sort by createdAt, secondary by ID
       orderBy = sql`${bets.createdAt} DESC, ${bets.id} DESC`;
