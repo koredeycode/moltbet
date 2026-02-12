@@ -465,15 +465,15 @@ app.openapi(concedeBetRoute, async (c) => {
 
   // Phase 1: Lock the bet (Update status to 'resolving')
   try {
-      const { rowCount } = await db.update(bets).set({
+      const updated = await db.update(bets).set({
         status: 'resolving', 
         updatedAt: new Date(),
       }).where(and(
           eq(bets.id, betId),
           or(eq(bets.status, 'countered'), eq(bets.status, 'win_claimed'))
-      ));
+      )).returning({ id: bets.id });
 
-      if (rowCount === 0) {
+      if (updated.length === 0) {
         return c.json({ success: false as const, error: 'Bet concurrent modification or invalid state' }, 409);
       }
   } catch (error) {
@@ -620,12 +620,14 @@ app.openapi(cancelBetRoute, async (c) => {
 
   // Phase 1: Lock the bet (Update status to 'cancelling')
   try {
-      const { rowCount } = await db.update(bets).set({
+      const updated = await db.update(bets).set({
         status: 'cancelling',
         updatedAt: new Date(),
-      }).where(and(eq(bets.id, betId), eq(bets.status, 'open')));
+      })
+      .where(and(eq(bets.id, betId), eq(bets.status, 'open')))
+      .returning({ id: bets.id });
 
-      if (rowCount === 0) {
+      if (updated.length === 0) {
         return c.json({ success: false as const, error: 'Bet concurrent modification or invalid state' }, 409);
       }
   } catch (error) {
@@ -845,28 +847,42 @@ app.openapi(getFeedRoute, async (c) => {
   if (cursor) {
       try {
           const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8'));
-          const { val, id } = decoded;
+          
+          if (!decoded || typeof decoded !== 'object') {
+              throw new Error('Invalid cursor shape');
+          }
+
+          const { val, id } = decoded as { val: unknown; id: unknown };
+
+          if (typeof val !== 'string') throw new Error('Invalid cursor value type');
+          if (typeof id !== 'string') throw new Error('Invalid cursor id type');
 
           if (sort === 'high_stakes') {
+               // Validate stake format
+               if (!/^\d+(\.\d+)?$/.test(val)) throw new Error('Invalid stake format in cursor');
+
                // For high stakes, we sort by stake descending
                // condition: (stake < val) OR (stake = val AND id < id)
                conditions.push(
                    or(
-                       sql`CAST(${bets.stake} AS DECIMAL) < ${parseFloat(val)}`,
+                       sql`CAST(${bets.stake} AS DECIMAL) < ${val}`,
                        and(
-                           sql`CAST(${bets.stake} AS DECIMAL) = ${parseFloat(val)}`,
+                           sql`CAST(${bets.stake} AS DECIMAL) = ${val}`,
                            sql`${bets.id} < ${id}`
                        )
                    )
                );
           } else {
                // Default: newest (createdAt desc)
+               const dateVal = new Date(val);
+               if (isNaN(dateVal.getTime())) throw new Error('Invalid date in cursor');
+
                // condition: (createdAt < val) OR (createdAt = val AND id < id)
                conditions.push(
                    or(
-                       sql`${bets.createdAt} < ${new Date(val).toISOString()}`,
+                       sql`${bets.createdAt} < ${dateVal.toISOString()}`,
                        and(
-                           eq(bets.createdAt, new Date(val)),
+                           eq(bets.createdAt, dateVal),
                            sql`${bets.id} < ${id}`
                        )
                    )

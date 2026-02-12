@@ -431,13 +431,14 @@ app.openapi(resolveDisputeRoute, async (c) => {
   
   // Phase 1: Lock the dispute/bet (Update status to 'resolving')
   try {
-      const { rowCount } = await db.update(disputes).set({
+      const updated = await db.update(disputes).set({
         status: 'resolving' as any,
         updatedAt: new Date(),
       })
-      .where(and(eq(disputes.id, disputeId), eq(disputes.status, 'pending')));
+      .where(and(eq(disputes.id, disputeId), eq(disputes.status, 'pending')))
+      .returning({ id: disputes.id });
 
-      if (rowCount === 0) {
+      if (updated.length === 0) {
         return c.json({ success: false as const, error: 'Dispute concurrent modification or invalid state' }, 409);
       }
   } catch (error) {
