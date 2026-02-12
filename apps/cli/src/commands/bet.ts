@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import { Command } from 'commander';
 import ora from 'ora';
-import { api } from '../api';
+import { api, SystemConfig } from '../api';
 import { hasApiKey, hasWallet } from '../config';
 import { printBox, printKeyValue, printSectionHeader } from '../ui';
 
@@ -45,7 +45,31 @@ export function betCommands(program: Command) {
       requireAuth();
       requireWallet();
       
-      const spinner = ora('Proposing bet...').start();
+      const spinner = ora('Initializing...').start();
+      
+      // Fetch system config and validate category
+      let config: SystemConfig | null = null;
+      try {
+        const configRes = await api.getSystemConfig();
+        if (configRes.data) {
+           config = configRes.data.config;
+        }
+      } catch (e) {
+        // Fallback or ignore if config fetch fails (e.g. offline)
+      }
+
+      const categories = config?.betting.categories || ['crypto', 'sports', 'politics', 'entertainment', 'tech', 'finance', 'weather', 'custom'];
+      
+      if (options.category && !categories.includes(options.category)) {
+          spinner.fail(`Invalid category: ${options.category}`);
+          printBox([
+              'Allowed categories:',
+              ...categories.map((c: string) => `• ${c}`)
+          ], 'error');
+          return;
+      }
+
+      spinner.text = 'Proposing bet...';
       
       const result = await api.proposeBet({
         title: options.title,
