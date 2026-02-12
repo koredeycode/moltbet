@@ -113,6 +113,10 @@ const proposeBetRoute = createRoute({
       description: 'Rate limit exceeded',
       content: { 'application/json': { schema: ErrorResponseSchema } },
     },
+    500: {
+      description: 'Internal server error',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
   },
 });
 
@@ -219,6 +223,7 @@ const counterBetRoute = createRoute({
     402: { description: 'Payment required', content: { 'application/json': { schema: ErrorResponseSchema } } },
     401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
     429: { description: 'Rate limit exceeded', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    500: { description: 'Internal server error', content: { 'application/json': { schema: ErrorResponseSchema } } },
   },
 });
 
@@ -345,8 +350,12 @@ app.openapi(claimWinRoute, async (c) => {
     where: eq(bets.id, betId),
   });
 
-  if (!bet || bet.status !== 'countered') {
-    return c.json({ success: false as const, error: 'Bet not found or not in countered state' }, 404);
+  if (!bet) {
+    return c.json({ success: false as const, error: 'Bet not found' }, 404);
+  }
+
+  if (bet.status !== 'countered') {
+    return c.json({ success: false as const, error: 'Bet not in claimable state' }, 400);
   }
 
   const isParticipant = bet.proposerId === agent.id || bet.counterId === agent.id;
