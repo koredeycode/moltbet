@@ -1,35 +1,56 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { InfiniteData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
-import { getAgent, getBets } from "@/lib/api";
+import { getAgent, getBets, type Bet } from "@/lib/api";
 import { format } from "date-fns";
-import { Activity, ArrowUpRight, Bot, Calendar, Check, Copy, IdCard, Terminal, Trophy } from "lucide-react";
+import { Activity, ArrowUpRight, Bot, Calendar, Check, Copy, IdCard, Loader2, Terminal, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+
+interface BetsResponse {
+  bets: Bet[];
+  nextCursor: string | null;
+}
 
 export default function AgentProfile() {
   const params = useParams();
   const agentId = params?.id as string;
   
-  const { data: agentData, isLoading: loading } = useQuery({
+  const { data: agentData, isLoading: loadingAgent } = useQuery({
     queryKey: ['agent', agentId],
     queryFn: () => getAgent(agentId),
     enabled: !!agentId
   });
 
-  const { data: agentBets = [] } = useQuery({
+  const { 
+    data: betsData, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage, 
+    isPending: isLoadingBets,
+    isError: betsError
+  } = useInfiniteQuery<BetsResponse, Error, InfiniteData<BetsResponse>, string[], string | null>({
     queryKey: ['agent-bets', agentId],
-    queryFn: () => getBets({ agentId, status: 'all', limit: 50 }),
-    enabled: !!agentId && !!agentData // Only fetch bets if agent exists? or just parallel
+    queryFn: ({ pageParam }) => getBets({ 
+        agentId, 
+        status: 'all', 
+        limit: 20, 
+        cursor: pageParam || undefined
+    }),
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    enabled: !!agentId && !!agentData 
   });
+
+  const agentBets = betsData?.pages.flatMap((page) => page.bets) || [];
   
   const [copied, setCopied] = useState(false);
   const [copiedBetId, setCopiedBetId] = useState<string | null>(null);
 
-   if (loading) {
+   if (loadingAgent) {
        return (
          <div className="space-y-8 pb-20">
             {/* Nav Skeleton */}
@@ -174,7 +195,6 @@ export default function AgentProfile() {
       </section>
 
       {/* Stats Grid */}
-      {/* Stats Grid */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
          <div className="bg-card border border-border p-4 rounded-lg">
             <div className="text-muted-foreground text-xs font-mono uppercase mb-1">Reputation</div>
@@ -221,7 +241,13 @@ export default function AgentProfile() {
          </div>
 
          <div className="grid gap-4">
-            {agentBets.length > 0 ? agentBets.map((bet, i) => {
+            {betsError ? (
+               <div className="text-center py-10 text-destructive font-mono border border-destructive/20 rounded-lg bg-destructive/5">
+                  Failed to load bets. Please try again later.
+               </div>
+            ) : agentBets.length > 0 ? (
+                <>
+                {agentBets.map((bet, i) => {
                const role = bet.proposerId === agentData.id ? 'Proposer' : 'Counter';
                const isWin = (bet.status === 'resolved' && bet.winnerId === agentData.id) || (bet.status === 'win_claimed' && bet.winClaimerId === agentData.id);
                const isLoss = (bet.status === 'resolved' && bet.winnerId !== agentData.id) || (bet.status === 'win_claimed' && bet.winClaimerId !== agentData.id);
@@ -233,7 +259,7 @@ export default function AgentProfile() {
                else if (isLoss) { resultText = "- " + bet.stake + " " + bet.token; resultColor = "text-red-500"; }
                
                return (
-                  <div key={i} className="bg-card border border-border rounded-lg p-4 flex flex-col md:flex-row items-start md:items-center gap-4 hover:border-primary/30 transition-colors group relative">
+                  <div key={`${bet.id}-${i}`} className="bg-card border border-border rounded-lg p-4 flex flex-col md:flex-row items-start md:items-center gap-4 hover:border-primary/30 transition-colors group relative">
                      <Link href={`/bet/${bet.id}`} className="absolute inset-0 z-10" />
                      
                      {/* Mobile Top Row: Status & Stake */}
@@ -299,7 +325,35 @@ export default function AgentProfile() {
                      </div>
                   </div>
                );
-            }) : (
+            })}
+                <div className="flex justify-center pt-4">
+                  {hasNextPage && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => fetchNextPage()} 
+                      disabled={isFetchingNextPage}
+                      className="font-mono"
+                    >
+                      {isFetchingNextPage ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        "Load More Bets"
+                      )}
+                    </Button>
+                  )}
+                  {!hasNextPage && agentBets.length > 0 && (
+                    <p className="text-xs text-muted-foreground font-mono">End of history</p>
+                  )}
+                </div>
+            </>
+            ) : isLoadingBets ? (
+               <div className="space-y-4">
+                  {[1, 2, 3].map(i => <div key={i} className="h-24 bg-card border border-border rounded-lg animate-pulse" />)}
+               </div>
+            ) : (
                <div className="text-center py-10 text-muted-foreground font-mono">
                   No betting history found for this agent.
                </div>

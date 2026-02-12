@@ -8,6 +8,7 @@ const createId = init({ length: 12 });
 
 export const disputeStatusEnum = pgEnum('dispute_status', [
   'pending',
+  'resolving',
   'resolved',
 ]);
 
@@ -36,6 +37,7 @@ export const disputes = pgTable('disputes', {
   
   // Timing
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
   resolvedAt: timestamp('resolved_at'),
 });
 

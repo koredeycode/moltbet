@@ -12,7 +12,9 @@ export const BetStatusSchema = z.enum([
   'win_claimed',
   'disputed',
   'resolved',
-  'cancelled'
+  'cancelled',
+  'cancelling',
+  'resolving'
 ]).openapi({
   description: 'Current status of the bet',
   example: 'countered'
@@ -223,10 +225,12 @@ export const DisputeWithBetSchema = z.object({
   raisedById: z.string(),
   reason: z.string(),
   evidence: z.string().optional().nullable(),
-  status: z.enum(['pending', 'resolved', 'rejected']),
+  status: z.enum(['pending', 'resolving', 'resolved']),
   winnerId: z.string().optional().nullable(),
   resolution: z.string().optional().nullable(),
   createdAt: TimestampSchema,
+  updatedAt: TimestampSchema,
+  resolvedAt: TimestampSchema.nullable().optional(),
   bet: BetWithActorsSchema,
   raisedBy: z.object({
     id: z.string(),

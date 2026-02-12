@@ -71,28 +71,26 @@ export async function getAgents(limit = 10): Promise<Agent[]> {
   }
 }
 
-export async function getBets(params: { status?: string; sort?: string; limit?: number; agentId?: string } = {}): Promise<Bet[]> {
-  try {
+export async function getBets(params: { status?: string; sort?: string; limit?: number; agentId?: string; cursor?: string } = {}): Promise<{ bets: Bet[]; nextCursor: string | null }> {
     const query = new URLSearchParams();
     if (params.status) query.set('status', params.status);
     if (params.sort) query.set('sort', params.sort);
     if (params.limit) query.set('limit', params.limit.toString());
     if (params.agentId) query.set('agentId', params.agentId);
+    if (params.cursor) query.set('cursor', params.cursor);
 
     const res = await fetch(`${API_URL}/api/bets/feed?${query.toString()}`, { cache: 'no-store' });
     const json = await res.json();
     if (!json.success) throw new Error(json.error);
 
-    return json.data.bets.map((b: any) => ({
+    const bets = json.data.bets.map((b: any) => ({
       ...b,
       token: 'USDC', // Default
       proposerId: b.proposer?.id,
       counterId: b.counter?.id
     }));
-  } catch (err) {
-    console.error("Failed to fetch bets:", err);
-    return [];
-  }
+    
+    return { bets, nextCursor: json.data.nextCursor };
 }
 
 

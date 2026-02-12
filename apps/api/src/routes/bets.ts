@@ -1,6 +1,6 @@
 // Betting routes with x402 payment integration
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
-import { desc, eq, or, sql } from 'drizzle-orm';
+import { and, desc, eq, or, sql } from 'drizzle-orm';
 import { Context } from 'hono';
 import { API_CONFIG } from '../config';
 import { agents, betEvents, bets, createId, getDb, notifications } from '../db';
@@ -428,6 +428,7 @@ const concedeBetRoute = createRoute({
     400: { description: 'Invalid bet state', content: { 'application/json': { schema: ErrorResponseSchema } } },
     403: { description: 'Not a participant', content: { 'application/json': { schema: ErrorResponseSchema } } },
     404: { description: 'Bet not found', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    409: { description: 'Concurrent modification', content: { 'application/json': { schema: ErrorResponseSchema } } },
     500: { description: 'Payout failed', content: { 'application/json': { schema: ErrorResponseSchema } } },
   },
 });
@@ -462,60 +463,103 @@ app.openapi(concedeBetRoute, async (c) => {
 
   if (!winnerAddress) return c.json({ success: false as const, error: 'Winner address not found' }, 500);
 
-  // Payout winner via Facilitator (Stake * 2)
+  // Phase 1: Lock the bet (Update status to 'resolving')
+  try {
+      const updated = await db.update(bets).set({
+        status: 'resolving', 
+        updatedAt: new Date(),
+      }).where(and(
+          eq(bets.id, betId),
+          or(eq(bets.status, 'countered'), eq(bets.status, 'win_claimed'))
+      )).returning({ id: bets.id });
+
+      if (updated.length === 0) {
+        return c.json({ success: false as const, error: 'Bet concurrent modification or invalid state' }, 409);
+      }
+  } catch (error) {
+       console.error("Failed to lock bet for resolution:", error);
+       return c.json({ success: false as const, error: 'Database error' }, 500);
+  }
+
+  // Phase 2: Payout winner via Facilitator (Stake * 2)
   const totalPayout = (parseFloat(bet.stake) * 2).toFixed(6);
   const result = await disbursePayout(winnerAddress, totalPayout);
 
   if (!result.success) {
+    // Rollback: Revert status to previous state
+    try {
+        await db.update(bets).set({
+            status: bet.status, // Revert to previous status (countered or win_claimed)
+            updatedAt: new Date(),
+        }).where(eq(bets.id, betId));
+    } catch (rollbackError) {
+         console.error(`CRITICAL: Failed to rollback bet ${betId} after payout failure. Error:`, rollbackError);
+    }
+
     return c.json({ success: false as const, error: 'Payout failed', details: result.error }, 500);
   }
 
-  await db.transaction(async (tx) => {
-    await tx
-        .update(bets)
-        .set({
-        status: 'resolved',
-        winnerId,
-        resolvedAt: new Date(),
-        resolutionTxHash: result.txHash,
-        updatedAt: new Date(),
-        })
-        .where(eq(bets.id, betId));
+  // Phase 3: Finalize (Update status to 'resolved')
+  try {
+    await db.transaction(async (tx) => {
+        await tx
+            .update(bets)
+            .set({
+            status: 'resolved',
+            winnerId,
+            resolvedAt: new Date(),
+            resolutionTxHash: result.txHash,
+            updatedAt: new Date(),
+            })
+            .where(eq(bets.id, betId));
 
-    await tx.update(agents)
-        .set({ 
-            wins: sql`${agents.wins} + 1`, 
-            reputation: sql`${agents.reputation} + 10`
-        }) 
-        .where(eq(agents.id, winnerId));
+        await tx.update(agents)
+            .set({ 
+                wins: sql`${agents.wins} + 1`, 
+                reputation: sql`${agents.reputation} + 10`
+            }) 
+            .where(eq(agents.id, winnerId));
 
-    const loserId = winnerId === bet.proposerId ? bet.counterId! : bet.proposerId;
-    await tx.update(agents)
-        .set({ losses: sql`${agents.losses} + 1` })
-        .where(eq(agents.id, loserId));
+        const loserId = winnerId === bet.proposerId ? bet.counterId! : bet.proposerId;
+        await tx.update(agents)
+            .set({ losses: sql`${agents.losses} + 1` })
+            .where(eq(agents.id, loserId));
 
-    await tx.insert(betEvents).values([
-        {
+        await tx.insert(betEvents).values([
+            {
+                betId: bet.id,
+                agentId: agent.id, 
+                type: 'conceded',
+                data: { txHash: result.txHash, winnerId },
+            },
+            {
+                betId: bet.id,
+                agentId: agent.id,
+                type: 'resolved',
+                data: { txHash: result.txHash, winnerId },
+            }
+        ]);
+
+        await tx.insert(notifications).values({
+            agentId: winnerId,
             betId: bet.id,
-            agentId: agent.id, 
-            type: 'conceded',
-            data: { txHash: result.txHash, winnerId },
-        },
-        {
-            betId: bet.id,
-            agentId: agent.id,
-            type: 'resolved',
-            data: { txHash: result.txHash, winnerId },
-        }
-    ]);
-
-    await tx.insert(notifications).values({
-        agentId: winnerId,
-        betId: bet.id,
-        type: 'payout_ready',
-        message: `You won "${bet.title}"! Payout sent.`,
+            type: 'payout_ready',
+            message: `You won "${bet.title}"! Payout sent.`,
+        });
     });
-  });
+  } catch (error) {
+      // Critical error: Funds sent but DB update failed.
+      console.error(`CRITICAL: Payout sent for bet ${betId} but DB update failed! Tx: ${result.txHash}. Error:`, error);
+      // We return success to the user because the payout happened, but log heavily.
+      // In a real system, we'd have a reconciliation job.
+      return c.json({
+        success: true as const,
+        data: {
+          message: 'Bet conceded and payout sent, but database update failed. Please contact support.',
+          txHash: result.txHash,
+        }
+      }, 200);
+  }
 
   return c.json({
     success: true as const,
@@ -556,6 +600,7 @@ const cancelBetRoute = createRoute({
     400: { description: 'Invalid bet state', content: { 'application/json': { schema: ErrorResponseSchema } } },
     403: { description: 'Only proposer can cancel', content: { 'application/json': { schema: ErrorResponseSchema } } },
     404: { description: 'Bet not found', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    409: { description: 'Concurrent modification', content: { 'application/json': { schema: ErrorResponseSchema } } },
     500: { description: 'Refund failed', content: { 'application/json': { schema: ErrorResponseSchema } } },
   },
 });
@@ -573,14 +618,42 @@ app.openapi(cancelBetRoute, async (c) => {
   if (bet.proposerId !== agent.id) return c.json({ success: false as const, error: 'Only proposer can cancel' }, 403);
   if (bet.status !== 'open') return c.json({ success: false as const, error: 'Bet cannot be cancelled (must be Open)' }, 400);
 
-  // Refund Stake via Facilitator
+  // Phase 1: Lock the bet (Update status to 'cancelling')
+  try {
+      const updated = await db.update(bets).set({
+        status: 'cancelling',
+        updatedAt: new Date(),
+      })
+      .where(and(eq(bets.id, betId), eq(bets.status, 'open')))
+      .returning({ id: bets.id });
+
+      if (updated.length === 0) {
+        return c.json({ success: false as const, error: 'Bet concurrent modification or invalid state' }, 409);
+      }
+  } catch (error) {
+      console.error("Failed to lock bet for cancellation:", error);
+      return c.json({ success: false as const, error: 'Database error' }, 500);
+  }
+
+  // Phase 2: Refund Stake via Facilitator
   // Since it was Open, only the proposer put money in.
   const result = await refundStake(agent.address, bet.stake);
 
   if (!result.success) {
+      // Rollback: Revert status to 'open' if refund fails
+      try {
+          await db.update(bets).set({
+            status: 'open',
+            updatedAt: new Date(),
+          }).where(eq(bets.id, betId));
+      } catch (rollbackError) {
+          console.error(`CRITICAL: Failed to rollback bet ${betId} cancellation after refund failure. Error:`, rollbackError);
+      }
+      
       return c.json({ success: false as const, error: 'Refund failed', details: result.error }, 500);
   }
 
+  // Phase 3: Finalize (Update status to 'cancelled')
   try {
       await db.update(bets).set({
         status: 'cancelled',
@@ -604,8 +677,9 @@ app.openapi(cancelBetRoute, async (c) => {
       }, 200);
 
   } catch (error: unknown) {
+      // Critical error: Funds sent but DB update failed. Log for manual intervention.
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error("Error submitting cancellation:", error);
+      console.error(`CRITICAL: Refund sent for bet ${betId} but DB update failed! Tx: ${result.txHash}. Error:`, error);
       return c.json({ success: false as const, error: errorMessage }, 500);
   }
 });
@@ -719,10 +793,6 @@ app.openapi(disputeBetRoute, async (c) => {
 // GET /bets/feed - Browse open bets
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /bets/feed - Browse open bets
-// ─────────────────────────────────────────────────────────────────────────────
-
 const getFeedRoute = createRoute({
   method: 'get',
   path: '/feed',
@@ -735,6 +805,7 @@ const getFeedRoute = createRoute({
       agentId: z.string().optional().openapi({ description: 'Filter by agent ID (proposer or counter)' }),
       status: z.enum(['open', 'countered', 'win_claimed', 'disputed', 'resolved', 'cancelled', 'all']).optional().openapi({ description: 'Filter by bet status' }),
       sort: z.enum(['newest', 'high_stakes']).optional().openapi({ description: 'Sort order' }),
+      cursor: z.string().optional().openapi({ description: 'Pagination cursor' }), // Added cursor
     }),
   },
   responses: {
@@ -743,7 +814,8 @@ const getFeedRoute = createRoute({
       content: {
         'application/json': {
           schema: SuccessResponseSchema(z.object({ 
-            bets: z.array(BetWithActorsSchema) 
+            bets: z.array(BetWithActorsSchema),
+            nextCursor: z.string().nullable().optional() // Added nextCursor
           })),
         },
       },
@@ -754,7 +826,7 @@ const getFeedRoute = createRoute({
 
 app.openapi(getFeedRoute, async (c) => {
   const db = getDb();
-  const { limit: limitStr, agentId, status, sort } = c.req.valid('query');
+  const { limit: limitStr, agentId, status, sort, cursor } = c.req.valid('query');
   const limitStrParsed = parseInt(limitStr || '20', 10);
   const limitSafe = isNaN(limitStrParsed) ? 20 : limitStrParsed;
   const limit = Math.min(Math.max(limitSafe, 1), 50);
@@ -771,14 +843,69 @@ app.openapi(getFeedRoute, async (c) => {
       if (!agentId) conditions.push(eq(bets.status, 'open'));
   }
 
+  // Cursor decoding
+  if (cursor) {
+      try {
+          const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8'));
+          
+          if (!decoded || typeof decoded !== 'object') {
+              throw new Error('Invalid cursor shape');
+          }
+
+          const { val, id } = decoded as { val: unknown; id: unknown };
+
+          if (typeof val !== 'string') throw new Error('Invalid cursor value type');
+          if (typeof id !== 'string') throw new Error('Invalid cursor id type');
+
+          if (sort === 'high_stakes') {
+               // Validate stake format
+               if (!/^\d+(\.\d+)?$/.test(val)) throw new Error('Invalid stake format in cursor');
+
+               // For high stakes, we sort by stake descending
+               // condition: (stake < val) OR (stake = val AND id < id)
+               conditions.push(
+                   or(
+                       sql`CAST(${bets.stake} AS DECIMAL) < ${val}`,
+                       and(
+                           sql`CAST(${bets.stake} AS DECIMAL) = ${val}`,
+                           sql`${bets.id} < ${id}`
+                       )
+                   )
+               );
+          } else {
+               // Default: newest (createdAt desc)
+               const dateVal = new Date(val);
+               if (isNaN(dateVal.getTime())) throw new Error('Invalid date in cursor');
+
+               // condition: (createdAt < val) OR (createdAt = val AND id < id)
+               conditions.push(
+                   or(
+                       sql`${bets.createdAt} < ${dateVal.toISOString()}`,
+                       and(
+                           eq(bets.createdAt, dateVal),
+                           sql`${bets.id} < ${id}`
+                       )
+                   )
+               );
+          }
+      } catch (e) {
+          // invalid cursor, ignore or could throw 400
+          console.error("Invalid cursor", e);
+      }
+  }
+
   let orderBy = desc(bets.createdAt);
   if (sort === 'high_stakes') {
-      orderBy = desc(sql`CAST(${bets.stake} AS FLOAT)`); 
+      // Primary sort by stake, secondary by ID for stable pagination
+      orderBy = sql`CAST(${bets.stake} AS DECIMAL) DESC, ${bets.id} DESC`; 
+  } else {
+      // Primary sort by createdAt, secondary by ID
+      orderBy = sql`${bets.createdAt} DESC, ${bets.id} DESC`;
   }
 
   const results = await db.query.bets.findMany({
     where: conditions.length ? sql`${sql.join(conditions, sql` AND `)}` : undefined,
-    limit,
+    limit: limit + 1, // Fetch one extra to determine if there is a next page
     orderBy,
     with: {
       proposer: true,
@@ -786,9 +913,23 @@ app.openapi(getFeedRoute, async (c) => {
     },
   });
 
+  let nextCursor: string | null = null;
+  if (results.length > limit) {
+      const nextItem = results.pop(); // Remove the extra item
+      const lastItem = results[results.length - 1];
+      
+      if (lastItem) {
+          const val = sort === 'high_stakes' ? lastItem.stake : lastItem.createdAt;
+          nextCursor = Buffer.from(JSON.stringify({ val, id: lastItem.id })).toString('base64');
+      }
+  }
+
   return c.json({
     success: true as const,
-    data: { bets: results },
+    data: { 
+        bets: results,
+        nextCursor
+    },
   }, 200);
 });
 
