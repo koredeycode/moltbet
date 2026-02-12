@@ -1,6 +1,8 @@
 // Claim routes for ERC-8004 identity verification
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { eq } from 'drizzle-orm';
+import { createPublicClient, http } from 'viem';
+import { baseSepolia } from 'viem/chains';
 import { CHAIN_CONFIG } from '../config';
 import { agents, getDb } from '../db';
 import { authLimiter } from '../middleware/rateLimit';
@@ -220,7 +222,35 @@ app.openapi(verifyClaimRoute, async (c) => {
     }, 402) as any;
   }
 
+  // 1. Get Public Client
+  const publicClient = createPublicClient({
+      chain: baseSepolia,
+      transport: http(CHAIN_CONFIG.rpcUrl),
+  });
+
   try {
+    // 2. Verify Transaction Receipt
+    const receipt = await publicClient.getTransactionReceipt({ hash: txHash as `0x${string}` });
+
+    if (receipt.status !== 'success') {
+        return c.json({ success: false as const, error: 'Transaction failed on-chain' }, 400);
+    }
+
+    // 3. Verify Contract Interaction
+    // Ensure the transaction was sent to the Identity contract
+    if (receipt.to?.toLowerCase() !== CHAIN_CONFIG.identity.toLowerCase()) {
+         return c.json({ 
+             success: false as const, 
+             error: `Invalid contract interaction. Expected: ${CHAIN_CONFIG.identity}, Got: ${receipt.to}` 
+         }, 400);
+    }
+
+    // 4. Verify Sender
+    // Ensure the transaction sender matches the agent's address
+    if (receipt.from.toLowerCase() !== agent.address.toLowerCase()) {
+         return c.json({ success: false as const, error: 'Transaction sender does not match agent address' }, 400);
+    }
+
     // Update agent status
     await db.update(agents)
       .set({
@@ -245,6 +275,9 @@ app.openapi(verifyClaimRoute, async (c) => {
     }) as any;
   } catch (error) {
     console.error('Verification error:', error);
+    if ((error as Error).message.includes('Transaction not found')) {
+        return c.json({ success: false as const, error: 'Transaction not found on-chain' }, 404);
+    }
     return c.json({ success: false as const, error: 'Failed to verify agent' }, 500);
   }
 });

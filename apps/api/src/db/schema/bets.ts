@@ -11,6 +11,8 @@ export const betStatusEnum = pgEnum('bet_status', [
   'win_claimed', // Winner claimed, awaiting response
   'disputed',    // Under admin review
   'resolved',    // Winner paid
+  'cancelling',  // Refund in progress
+  'resolving',   // Payout in progress
   'cancelled',   // Refunded (also used for expired bets - matches contract Cancelled state)
 ]);
 

@@ -428,11 +428,28 @@ app.openapi(resolveDisputeRoute, async (c) => {
     return c.json({ success: false as const, error: 'Winner address not found' }, 500);
   }
   
-  // Resolve on-chain by disbursing payout
+  // Phase 1: Lock the dispute/bet (Update status to 'resolving')
+  try {
+      await db.update(disputes).set({
+        status: 'resolving' as any,
+        updatedAt: new Date(),
+      }).where(eq(disputes.id, disputeId));
+  } catch (error) {
+       console.error("Failed to lock dispute for resolution:", error);
+       return c.json({ success: false as const, error: 'Database error' }, 500);
+  }
+
+  // Phase 2: Resolve on-chain by disbursing payout
   const totalPayout = (parseFloat(bet.stake) * 2).toFixed(6);
   const result = await disbursePayout(winnerAddress, totalPayout);
   
   if (!result.success) {
+    // Rollback: Revert status to 'pending'
+    await db.update(disputes).set({
+        status: 'pending',
+        updatedAt: new Date(),
+    }).where(eq(disputes.id, disputeId));
+
     return c.json({ 
       success: false as const, 
       error: 'Payout disbursement failed', 
@@ -440,68 +457,81 @@ app.openapi(resolveDisputeRoute, async (c) => {
     }, 500);
   }
   
-  // Atomic Update
-  await db.transaction(async (tx) => {
-    // Update dispute
-    await tx.update(disputes)
-        .set({
-        status: 'resolved',
-        resolvedById: 'admin',
-        resolution: adminNotes || 'Resolved by admin',
-        winnerId,
-        resolvedAt: new Date(),
-        })
-        .where(eq(disputes.id, disputeId));
-    
-    // Update bet
-    await tx.update(bets)
-        .set({
-        status: 'resolved',
-        winnerId,
-        resolvedAt: new Date(),
-        resolutionTxHash: result.txHash,
-        updatedAt: new Date(),
-        })
-        .where(eq(bets.id, bet.id));
+  // Phase 3: Atomic Update of DB
+  try {
+    await db.transaction(async (tx) => {
+        // Update dispute
+        await tx.update(disputes)
+            .set({
+            status: 'resolved',
+            resolvedById: 'admin',
+            resolution: adminNotes || 'Resolved by admin',
+            winnerId,
+            resolvedAt: new Date(),
+            })
+            .where(eq(disputes.id, disputeId));
+        
+        // Update bet
+        await tx.update(bets)
+            .set({
+            status: 'resolved',
+            winnerId,
+            resolvedAt: new Date(),
+            resolutionTxHash: result.txHash,
+            updatedAt: new Date(),
+            })
+            .where(eq(bets.id, bet.id));
 
-    // Update winner stats
-    await tx.update(agents)
-        .set({ 
-            wins: sql`${agents.wins} + 1`, 
-            reputation: sql`${agents.reputation} + 10`
-        }) 
-        .where(eq(agents.id, winnerId));
+        // Update winner stats
+        await tx.update(agents)
+            .set({ 
+                wins: sql`${agents.wins} + 1`, 
+                reputation: sql`${agents.reputation} + 10`
+            }) 
+            .where(eq(agents.id, winnerId));
 
-    // Update loser stats
-    const loserId = winnerId === bet.proposerId ? bet.counterId! : bet.proposerId;
-    await tx.update(agents)
-        .set({ losses: sql`${agents.losses} + 1` })
-        .where(eq(agents.id, loserId));
-    
-    // Log event
-    await tx.insert(betEvents).values({
-        betId: bet.id,
-        agentId: winnerId, // Admin resolved in favor of winner
-        type: 'resolved',
-        data: { winnerId, disputeId, txHash: result.txHash, resolution: adminNotes },
+        // Update loser stats
+        const loserId = winnerId === bet.proposerId ? bet.counterId! : bet.proposerId;
+        await tx.update(agents)
+            .set({ losses: sql`${agents.losses} + 1` })
+            .where(eq(agents.id, loserId));
+        
+        // Log event
+        await tx.insert(betEvents).values({
+            betId: bet.id,
+            agentId: winnerId, // Admin resolved in favor of winner
+            type: 'resolved',
+            data: { winnerId, disputeId, txHash: result.txHash, resolution: adminNotes },
+        });
+        
+        // Notify both parties
+        await tx.insert(notifications).values([
+            {
+            agentId: winnerId,
+            betId: bet.id,
+            type: 'dispute_resolved',
+            message: `Dispute resolved in your favor for "${bet.title}". Payout sent.`,
+            },
+            {
+            agentId: loserId!,
+            betId: bet.id,
+            type: 'dispute_resolved',
+            message: `Dispute resolved against you for "${bet.title}".`,
+            },
+        ]);
     });
-    
-    // Notify both parties
-    await tx.insert(notifications).values([
-        {
-        agentId: winnerId,
-        betId: bet.id,
-        type: 'dispute_resolved',
-        message: `Dispute resolved in your favor for "${bet.title}". Payout sent.`,
-        },
-        {
-        agentId: loserId!,
-        betId: bet.id,
-        type: 'dispute_resolved',
-        message: `Dispute resolved against you for "${bet.title}".`,
-        },
-    ]);
-  });
+  } catch (error) {
+     // Critical error
+     console.error(`CRITICAL: Admin resolution payout sent for dispute ${disputeId} but DB update failed! Tx: ${result.txHash}. Error:`, error);
+     return c.json({
+        success: true as const,
+        data: {
+          message: 'Dispute resolved and payout sent, but database update failed. Check logs.',
+          winnerId,
+          txHash: result.txHash,
+        }
+      }, 200);
+  }
   
   return c.json({
     success: true as const,

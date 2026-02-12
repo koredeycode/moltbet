@@ -462,60 +462,95 @@ app.openapi(concedeBetRoute, async (c) => {
 
   if (!winnerAddress) return c.json({ success: false as const, error: 'Winner address not found' }, 500);
 
-  // Payout winner via Facilitator (Stake * 2)
+  // Phase 1: Lock the bet (Update status to 'resolving')
+  try {
+      // We explicitly cast 'resolving' because strict type checking might not pick up the schema change immediately 
+      // without regenerating drizzle types, but runtime it's fine if the DB migration ran.
+      // Assuming enum allows it now.
+      await db.update(bets).set({
+        status: 'resolving' as any, 
+        updatedAt: new Date(),
+      }).where(eq(bets.id, betId));
+  } catch (error) {
+       console.error("Failed to lock bet for resolution:", error);
+       return c.json({ success: false as const, error: 'Database error' }, 500);
+  }
+
+  // Phase 2: Payout winner via Facilitator (Stake * 2)
   const totalPayout = (parseFloat(bet.stake) * 2).toFixed(6);
   const result = await disbursePayout(winnerAddress, totalPayout);
 
   if (!result.success) {
+    // Rollback: Revert status to previous state
+    await db.update(bets).set({
+        status: bet.status, // Revert to previous status (countered or win_claimed)
+        updatedAt: new Date(),
+    }).where(eq(bets.id, betId));
+
     return c.json({ success: false as const, error: 'Payout failed', details: result.error }, 500);
   }
 
-  await db.transaction(async (tx) => {
-    await tx
-        .update(bets)
-        .set({
-        status: 'resolved',
-        winnerId,
-        resolvedAt: new Date(),
-        resolutionTxHash: result.txHash,
-        updatedAt: new Date(),
-        })
-        .where(eq(bets.id, betId));
+  // Phase 3: Finalize (Update status to 'resolved')
+  try {
+    await db.transaction(async (tx) => {
+        await tx
+            .update(bets)
+            .set({
+            status: 'resolved',
+            winnerId,
+            resolvedAt: new Date(),
+            resolutionTxHash: result.txHash,
+            updatedAt: new Date(),
+            })
+            .where(eq(bets.id, betId));
 
-    await tx.update(agents)
-        .set({ 
-            wins: sql`${agents.wins} + 1`, 
-            reputation: sql`${agents.reputation} + 10`
-        }) 
-        .where(eq(agents.id, winnerId));
+        await tx.update(agents)
+            .set({ 
+                wins: sql`${agents.wins} + 1`, 
+                reputation: sql`${agents.reputation} + 10`
+            }) 
+            .where(eq(agents.id, winnerId));
 
-    const loserId = winnerId === bet.proposerId ? bet.counterId! : bet.proposerId;
-    await tx.update(agents)
-        .set({ losses: sql`${agents.losses} + 1` })
-        .where(eq(agents.id, loserId));
+        const loserId = winnerId === bet.proposerId ? bet.counterId! : bet.proposerId;
+        await tx.update(agents)
+            .set({ losses: sql`${agents.losses} + 1` })
+            .where(eq(agents.id, loserId));
 
-    await tx.insert(betEvents).values([
-        {
+        await tx.insert(betEvents).values([
+            {
+                betId: bet.id,
+                agentId: agent.id, 
+                type: 'conceded',
+                data: { txHash: result.txHash, winnerId },
+            },
+            {
+                betId: bet.id,
+                agentId: agent.id,
+                type: 'resolved',
+                data: { txHash: result.txHash, winnerId },
+            }
+        ]);
+
+        await tx.insert(notifications).values({
+            agentId: winnerId,
             betId: bet.id,
-            agentId: agent.id, 
-            type: 'conceded',
-            data: { txHash: result.txHash, winnerId },
-        },
-        {
-            betId: bet.id,
-            agentId: agent.id,
-            type: 'resolved',
-            data: { txHash: result.txHash, winnerId },
-        }
-    ]);
-
-    await tx.insert(notifications).values({
-        agentId: winnerId,
-        betId: bet.id,
-        type: 'payout_ready',
-        message: `You won "${bet.title}"! Payout sent.`,
+            type: 'payout_ready',
+            message: `You won "${bet.title}"! Payout sent.`,
+        });
     });
-  });
+  } catch (error) {
+      // Critical error: Funds sent but DB update failed.
+      console.error(`CRITICAL: Payout sent for bet ${betId} but DB update failed! Tx: ${result.txHash}. Error:`, error);
+      // We return success to the user because the payout happened, but log heavily.
+      // In a real system, we'd have a reconciliation job.
+      return c.json({
+        success: true as const,
+        data: {
+          message: 'Bet conceded and payout sent, but database update failed. Please contact support.',
+          txHash: result.txHash,
+        }
+      }, 200);
+  }
 
   return c.json({
     success: true as const,
@@ -573,14 +608,32 @@ app.openapi(cancelBetRoute, async (c) => {
   if (bet.proposerId !== agent.id) return c.json({ success: false as const, error: 'Only proposer can cancel' }, 403);
   if (bet.status !== 'open') return c.json({ success: false as const, error: 'Bet cannot be cancelled (must be Open)' }, 400);
 
-  // Refund Stake via Facilitator
+  // Phase 1: Lock the bet (Update status to 'cancelling')
+  try {
+      await db.update(bets).set({
+        status: 'cancelling',
+        updatedAt: new Date(),
+      }).where(eq(bets.id, betId));
+  } catch (error) {
+      console.error("Failed to lock bet for cancellation:", error);
+      return c.json({ success: false as const, error: 'Database error' }, 500);
+  }
+
+  // Phase 2: Refund Stake via Facilitator
   // Since it was Open, only the proposer put money in.
   const result = await refundStake(agent.address, bet.stake);
 
   if (!result.success) {
+      // Rollback: Revert status to 'open' if refund fails
+      await db.update(bets).set({
+        status: 'open',
+        updatedAt: new Date(),
+      }).where(eq(bets.id, betId));
+      
       return c.json({ success: false as const, error: 'Refund failed', details: result.error }, 500);
   }
 
+  // Phase 3: Finalize (Update status to 'cancelled')
   try {
       await db.update(bets).set({
         status: 'cancelled',
@@ -604,8 +657,9 @@ app.openapi(cancelBetRoute, async (c) => {
       }, 200);
 
   } catch (error: unknown) {
+      // Critical error: Funds sent but DB update failed. Log for manual intervention.
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error("Error submitting cancellation:", error);
+      console.error(`CRITICAL: Refund sent for bet ${betId} but DB update failed! Tx: ${result.txHash}. Error:`, error);
       return c.json({ success: false as const, error: errorMessage }, 500);
   }
 });

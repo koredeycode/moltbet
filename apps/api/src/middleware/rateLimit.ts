@@ -1,13 +1,10 @@
 import { Context } from 'hono';
 import { rateLimiter, type Store } from 'hono-rate-limiter';
 import RedisStore from "rate-limit-redis";
-import { createClient } from "redis";
+import { redisClient } from '../services/redis';
 
-import { env } from '../config/env';
+// Removed local redisClient creation
 
-// Create Redis client
-const redisClient = createClient({ url: env.REDIS_URL });
-redisClient.connect();
 
 // Helper to create limiters
 const createLimiter = (windowMs: number, limit: number, prefix: string) => {
