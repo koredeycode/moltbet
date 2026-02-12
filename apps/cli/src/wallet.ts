@@ -1,15 +1,15 @@
 // Wallet management - Simplified (no encryption)
 import { createPublicClient, formatEther, http, parseAbi } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
-import { baseSepolia } from 'viem/chains';
+import { skaleBaseSepoliaTestnet } from 'viem/chains';
 import { getPrivateKey, getWalletAddress, setWallet } from './config';
 
-// USDC on Base Sepolia
-const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e';
+// USDC on Skale Base Sepolia
+const USDC_ADDRESS = '0x2e08028E3C4c2356572E096d8EF835cD5C6030bD';
 
 const publicClient = createPublicClient({
-  chain: baseSepolia,
-  transport: http('https://sepolia.base.org'),
+  chain: skaleBaseSepoliaTestnet,
+  transport: http('https://base-sepolia-testnet.skalenodes.com/v1/jubilant-horrible-ancha'),
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

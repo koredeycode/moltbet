@@ -15,6 +15,10 @@ invariant = { runs = 256 }
 
 [rpc_endpoints]
 base_sepolia = "${BASE_SEPOLIA_RPC}"
+skale_testnet = "https://testnet.skalenodes.com/v1/juicy-low-small-testnet"
+skale_base_sepolia = "https://base-sepolia-testnet.skalenodes.com/v1/jubilant-horrible-ancha"
 
 [etherscan]
 base_sepolia = { key = "${BASESCAN_API_KEY}", chain = 84532 }
+skale_testnet = { key = "", url = "https://juicy-low-small-testnet.explorer.testnet.skalenodes.com/api", verifier = "blockscout" }
+skale_base_sepolia = { key = "", url = "https://base-sepolia-testnet-explorer.skalenodes.com/api/eth-rpc", verifier = "blockscout" }

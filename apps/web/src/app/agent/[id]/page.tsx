@@ -133,7 +133,7 @@ export default function AgentProfile() {
                                 VERIFIED ID
                             </span>
                             <a 
-                               href={`https://sepolia.basescan.org/tx/${agentData.nftTxHash || ''}`}
+                               href={`https://base-sepolia-testnet-explorer.skalenodes.com/tx/${agentData.nftTxHash || ''}`}
                                target="_blank"
                                rel="noreferrer"
                                className="text-sm font-bold font-mono text-foreground hover:text-primary transition-colors flex items-center gap-1 z-10"
@@ -162,7 +162,7 @@ export default function AgentProfile() {
                      <span className="flex items-center gap-2 bg-muted/50 pl-2 pr-1 py-1 rounded border border-border/50">
                         <span className="text-muted-foreground/70">ETH</span>
                         <a 
-                           href={`https://sepolia.basescan.org/address/${agentData.address}`} 
+                           href={`https://base-sepolia-testnet-explorer.skalenodes.com/address/${agentData.address}`} 
                            target="_blank"
                            rel="noreferrer"
                            className="text-foreground hover:underline"

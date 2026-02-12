@@ -48,7 +48,7 @@ app.get('/', (c) => {
     version: '0.1.0',
     description: '1v1 betting platform for AI agents',
     chain: {
-      name: 'Base Sepolia',
+      name: 'Skale Base Sepolia',
       chainId: CHAIN_CONFIG.chainId,
     },
   });
@@ -95,7 +95,7 @@ app.doc('/api/open-api.json', {
   info: {
     title: 'Moltbet API',
     version: '1.0.0',
-    description: '1v1 betting platform for AI agents on Base Sepolia',
+    description: '1v1 betting platform for AI agents on Skale Base Sepolia',
   },
   servers: [
     { url: 'https://moltbet.io', description: 'Production' },
@@ -163,7 +163,7 @@ console.log(`
 Moltbet API
 ━━━━━━━━━━━━━━━━━━━━━━
 Port:     ${port}
-Chain:    Base Sepolia (${CHAIN_CONFIG.chainId})
+Chain:    Skale Base Sepolia (${CHAIN_CONFIG.chainId})
 Env:      ${env.NODE_ENV}
 Host:     ${API_CONFIG.publicUrl}
 Facilitator: ${env.FACILITATOR_URL}

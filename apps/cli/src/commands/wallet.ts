@@ -141,7 +141,7 @@ export function walletCommands(program: Command) {
         printKeyValue('USDC', chalk.greenBright(`${usdc} USDC`));
         printKeyValue('ETH', chalk.blueBright(`${eth} ETH`));
         console.log();
-        console.log(chalk.dim('  Chain: Base Sepolia (84532)'));
+        console.log(chalk.dim('  Chain: Skale Base Sepolia (324705682)'));
         console.log();
         
       } catch (err) {

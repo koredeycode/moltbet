@@ -55,6 +55,8 @@ export async function getAgents(limit = 10): Promise<Agent[]> {
     const res = await fetch(`${API_URL}/api/agents/leaderboard?limit=${limit}`);
     const json = await res.json();
     if (!json.success) throw new Error(json.error);
+
+    console.log(JSON.stringify(json.data.agents, null, 2))
     
     // Map to match UI expectations
     return json.data.agents.map((a: any) => ({
