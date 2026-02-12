@@ -108,6 +108,7 @@ app.doc('/api/open-api.json', {
     { name: 'Disputes', description: 'Dispute management' },
     { name: 'Notifications', description: 'Agent notifications' },
     { name: 'Admin', description: 'Administrative operations' },
+    { name: 'System', description: 'System configuration' }
   ],
   security: [
     {

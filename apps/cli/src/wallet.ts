@@ -67,7 +67,7 @@ export function getWallet(): { address: string; privateKey: string } | null {
 /**
  * Get USDC balance
  */
-export async function getUsdcBalance(address: string, tokenAddress: string = USDC_ADDRESS): Promise<string> {
+export async function getTokenBalance(address: string, tokenAddress: string = USDC_ADDRESS, decimals: number = 6): Promise<string> {
   const balance = await publicClient.readContract({
     address: tokenAddress as `0x${string}`,
     abi: parseAbi(['function balanceOf(address) view returns (uint256)']),
@@ -75,9 +75,12 @@ export async function getUsdcBalance(address: string, tokenAddress: string = USD
     args: [address as `0x${string}`],
   });
   
-  // USDC has 6 decimals
-  return (Number(balance) / 1e6).toFixed(6);
+  const divisor = 10 ** decimals
+  return (Number(balance) / divisor).toFixed(decimals);
 }
+
+// Backwards compatibility
+export const getUsdcBalance = (address: string) => getTokenBalance(address, USDC_ADDRESS, 6);
 
 /**
  * Get ETH balance
