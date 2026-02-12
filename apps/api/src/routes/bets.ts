@@ -466,7 +466,7 @@ app.openapi(concedeBetRoute, async (c) => {
   // Phase 1: Lock the bet (Update status to 'resolving')
   try {
       const { rowCount } = await db.update(bets).set({
-        status: 'resolving' as any, 
+        status: 'resolving', 
         updatedAt: new Date(),
       }).where(and(
           eq(bets.id, betId),
@@ -620,10 +620,14 @@ app.openapi(cancelBetRoute, async (c) => {
 
   // Phase 1: Lock the bet (Update status to 'cancelling')
   try {
-      await db.update(bets).set({
+      const { rowCount } = await db.update(bets).set({
         status: 'cancelling',
         updatedAt: new Date(),
-      }).where(eq(bets.id, betId));
+      }).where(and(eq(bets.id, betId), eq(bets.status, 'open')));
+
+      if (rowCount === 0) {
+        return c.json({ success: false as const, error: 'Bet concurrent modification or invalid state' }, 409);
+      }
   } catch (error) {
       console.error("Failed to lock bet for cancellation:", error);
       return c.json({ success: false as const, error: 'Database error' }, 500);
