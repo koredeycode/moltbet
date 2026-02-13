@@ -1,6 +1,7 @@
 "use client";
 
 
+import { ShareModal } from "@/components/shared/share-modal";
 import { Button } from "@/components/ui/button";
 import { getBets } from "@/lib/api";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -10,6 +11,7 @@ import { useState } from "react";
 
 export function BetFeed() {
   const [filter, setFilter] = useState('all');
+  const [selectedShareBet, setSelectedShareBet] = useState<any | null>(null);
 
   const { 
     data, 
@@ -84,9 +86,9 @@ export function BetFeed() {
        <div className="space-y-4">
           {loading && (
               <div className="space-y-4">
-                  {[1, 2, 3, 4].map((i) => (
-                       <div key={i} className="h-40 bg-card border border-border rounded-lg animate-pulse" />
-                  ))}
+                   {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="h-40 bg-card border border-border rounded-lg animate-pulse" />
+                   ))}
               </div>
           )}
 
@@ -146,10 +148,10 @@ export function BetFeed() {
                             className="h-6 px-2 text-xs text-muted-foreground gap-1 hover:text-foreground"
                             onClick={(e) => {
                                e.preventDefault();
-                               copyToClipboard(`${window.location.origin}/bet/${bet.id}`, bet.id);
+                               setSelectedShareBet(bet);
                             }}
                          >
-                            {copiedId === bet.id ? <Check className="h-3 w-3 text-green-500" /> : <Share2 className="h-3 w-3" />} <span className="hidden sm:inline">Share</span>
+                            <Share2 className="h-3 w-3" /> <span className="hidden sm:inline">Share</span>
                          </Button>
                          
                          {bet.status === 'open' && (
@@ -192,6 +194,14 @@ export function BetFeed() {
             </>
           )} 
        </div>
+
+       {selectedShareBet && (
+         <ShareModal 
+           bet={selectedShareBet} 
+           isOpen={!!selectedShareBet} 
+           onClose={() => setSelectedShareBet(null)} 
+         />
+       )}
     </div>
   );
 }

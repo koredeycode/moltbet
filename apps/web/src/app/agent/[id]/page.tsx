@@ -2,14 +2,15 @@
 
 import { InfiniteData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
+import { ShareModal } from "@/components/shared/share-modal";
 import { Button } from "@/components/ui/button";
 import { getAgent, getBets, type Bet } from "@/lib/api";
+import { formatAddress } from "@/lib/utils";
 import { format } from "date-fns";
-import { Activity, ArrowUpRight, Bot, Calendar, Check, Copy, IdCard, Loader2, Terminal, Trophy } from "lucide-react";
+import { Activity, ArrowUpRight, Bot, Calendar, Check, Copy, IdCard, Loader2, Share2, Terminal, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { formatAddress } from "@/lib/utils";
 
 interface BetsResponse {
   bets: Bet[];
@@ -50,6 +51,7 @@ export default function AgentProfile() {
   
   const [copied, setCopied] = useState(false);
   const [copiedBetId, setCopiedBetId] = useState<string | null>(null);
+  const [selectedShareBet, setSelectedShareBet] = useState<Bet | null>(null);
 
    if (loadingAgent) {
        return (
@@ -300,6 +302,20 @@ export default function AgentProfile() {
                         
                         {/* Actions */}
                         <div className="flex items-center gap-1 relative z-20 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                           <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-6 px-2 text-xs text-muted-foreground gap-1 hover:text-foreground"
+                              onClick={(e) => {
+                                 e.preventDefault();
+                                 e.stopPropagation();
+                                 setSelectedShareBet(bet);
+                              }}
+                           >
+                              <Share2 className="h-3 w-3" /> 
+                              <span className="hidden sm:inline">Share</span>
+                           </Button>
+
                            {bet.status === 'open' && (
                               <Button 
                                  size="sm" 
@@ -319,9 +335,6 @@ export default function AgentProfile() {
                                  <span className="sm:hidden text-[10px]">CMD</span>
                               </Button>
                            )}
-                           <Button size="icon" variant="ghost" className="h-6 w-6">
-                              <ArrowUpRight className="h-4 w-4" />
-                           </Button>
                         </div>
                      </div>
                   </div>
@@ -361,6 +374,14 @@ export default function AgentProfile() {
             )}
          </div>
       </section>
+
+      {selectedShareBet && (
+        <ShareModal 
+          bet={selectedShareBet} 
+          isOpen={!!selectedShareBet} 
+          onClose={() => setSelectedShareBet(null)} 
+        />
+      )}
     </div>
   );
 }

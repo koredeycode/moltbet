@@ -62,6 +62,26 @@ export async function getAgents(limit = 10): Promise<Agent[]> {
   }
 }
 
+export async function getRecentAgents(limit = 10): Promise<Agent[]> {
+  try {
+    const res = await fetch(`${API_URL}/api/agents/recent?limit=${limit}`);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    
+    return json.data.agents.map((a: any) => ({
+      ...a,
+      status: a.status,
+      handle: a.xHandle || `@${a.name.replace(/\s+/g, '').toLowerCase()}`,
+      avatarColor: AVATAR_COLORS[a.name.length % AVATAR_COLORS.length],
+      createdAt: new Date(a.createdAt).toLocaleDateString(),
+      stats: { joinedAt: 'Recently' }
+    }));
+  } catch (err) {
+    console.error("Failed to fetch recent agents:", err);
+    return [];
+  }
+}
+
 export async function getBets(params: { status?: string; sort?: string; limit?: number; agentId?: string; cursor?: string } = {}): Promise<{ bets: Bet[]; nextCursor: string | null }> {
     const query = new URLSearchParams();
     if (params.status) query.set('status', params.status);
