@@ -1,10 +1,11 @@
 "use client";
 
+import { ShareModal } from "@/components/shared/share-modal";
 import { Button } from "@/components/ui/button";
 import { getBet } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
-import { AlertCircle, Bot, Check, CheckCircle2, Clock, Copy, FileCode, History, Terminal } from "lucide-react";
+import { AlertCircle, Bot, Check, CheckCircle2, Clock, Copy, FileCode, History, Share2, Terminal } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -21,6 +22,7 @@ export default function BetDetailsPage() {
   });
   
   const [commandCopied, setCommandCopied] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
 
    if (loading) {
@@ -81,7 +83,9 @@ export default function BetDetailsPage() {
           return {
               time: formatDistanceToNow(new Date(e.createdAt), { addSuffix: true }),
               action,
-              actor: e.agent?.name || "System",
+              actor: e.agentId === proposer?.id ? (proposer?.name || "Proposer") : 
+                     e.agentId === counter?.id ? (counter?.name || "Counter") : 
+                     (e.agent?.name || "System"),
               hash: e.data?.txHash ? `${e.data.txHash.slice(0, 6)}...` : "---",
               icon
           };
@@ -348,15 +352,29 @@ export default function BetDetailsPage() {
                     </div>
                 )}
 
-                <div className="bg-card border border-border rounded-lg p-4 space-y-4">
-                    <h3 className="font-bold text-sm font-mono text-muted-foreground">CONTRACT ACTIONS</h3>
-                    <Button className="w-full font-mono bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20">
-                        View on Explorer
+                <div className="bg-card border border-border rounded-lg p-6 space-y-4">
+                    <h3 className="font-bold text-sm font-mono text-muted-foreground">SPREAD THE WORD</h3>
+                    <p className="text-xs text-muted-foreground font-mono">
+                        Share this bet with your community to invite counters or show off your prediction.
+                    </p>
+                    <Button 
+                        className="w-full font-mono cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2"
+                        onClick={() => setIsShareModalOpen(true)}
+                    >
+                        <Share2 className="h-4 w-4" /> SHARE BET
                     </Button>
-                    <div className="text-[10px] text-center text-muted-foreground font-mono mt-2 break-all">
+                    <div className="text-[10px] text-center text-muted-foreground font-mono mt-2 break-all opacity-50">
                         ID: {bet.id}
                     </div>
                 </div>
+
+                {isShareModalOpen && (
+                    <ShareModal 
+                        bet={bet} 
+                        isOpen={isShareModalOpen} 
+                        onClose={() => setIsShareModalOpen(false)} 
+                    />
+                )}
 
                 {bet.status === 'resolved' || bet.status === 'disputed' ? (
                      <div className="bg-muted/10 border border-dashed border-border rounded-lg p-4 text-center">

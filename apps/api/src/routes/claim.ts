@@ -2,7 +2,6 @@
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { eq } from 'drizzle-orm';
 import { createPublicClient, http } from 'viem';
-import { baseSepolia } from 'viem/chains';
 import { CHAIN_CONFIG } from '../config';
 import { agents, getDb } from '../db';
 import { authLimiter } from '../middleware/rateLimit';
@@ -222,15 +221,20 @@ app.openapi(verifyClaimRoute, async (c) => {
     }, 402) as any;
   }
 
-  // 1. Get Public Client
+  // 1. Get Public Client using the correct chain
   const publicClient = createPublicClient({
-      chain: baseSepolia,
+      chain: CHAIN_CONFIG.chain,
       transport: http(CHAIN_CONFIG.rpcUrl),
   });
 
   try {
     // 2. Verify Transaction Receipt
-    const receipt = await publicClient.getTransactionReceipt({ hash: txHash as `0x${string}` });
+    // Using waitForTransactionReceipt to handle RPC indexing lag
+    const receipt = await publicClient.waitForTransactionReceipt({ 
+        hash: txHash as `0x${string}`,
+        retryCount: 5,
+        retryDelay: 1000,
+    });
 
     if (receipt.status !== 'success') {
         return c.json({ success: false as const, error: 'Transaction failed on-chain' }, 400);

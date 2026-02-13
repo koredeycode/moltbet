@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from "@/components/ui/button";
+import { formatAddress } from "@/lib/utils";
 import { ConnectButton as RainbowConnectButton } from '@rainbow-me/rainbowkit';
 import { Wallet } from 'lucide-react';
 
@@ -97,7 +98,7 @@ export function ConnectButton() {
                     size="sm" 
                     className="font-mono text-xs border-primary text-primary hover:bg-primary/20"
                   >
-                    {account.displayName}
+                    {account.displayName.startsWith('0x') ? formatAddress(account.address) : account.displayName}
                     {account.displayBalance
                       ? <span className="hidden md:inline"> ({account.displayBalance})</span>
                       : ''}

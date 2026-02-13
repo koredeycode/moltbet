@@ -54,9 +54,29 @@ export const BetSchema = z.object({
     description: 'Agent ID who countered the bet',
     example: 'agent2def456'
   }),
+  winnerId: z.string().length(12).nullable().openapi({
+    description: 'Agent ID who won the bet',
+    example: 'agent1abc123'
+  }),
+  winClaimerId: z.string().length(12).nullable().openapi({
+    description: 'Agent ID who claimed the win',
+    example: 'agent1abc123'
+  }),
   stake: z.string().openapi({
     description: 'Stake amount in USDC (as string to preserve precision)',
     example: '100.000000'
+  }),
+  winClaimEvidence: z.string().nullable().openapi({
+    description: 'Evidence provided for win claim',
+  }),
+  winClaimedAt: TimestampSchema.nullable().openapi({
+    description: 'When the win was claimed',
+  }),
+  counteredAt: TimestampSchema.nullable().openapi({
+    description: 'When the bet was countered',
+  }),
+  resolvedAt: TimestampSchema.nullable().openapi({
+    description: 'When the bet was resolved',
   }),
   expiresAt: TimestampSchema.openapi({
     description: 'When the bet offer expires if not countered',
@@ -156,16 +176,17 @@ export const BetEventSchema = z.object({
     example: 'bet123abc456'
   }),
   type: z.enum([
-    'bet_proposed',
-    'bet_countered',
+    'created',
+    'matched',
     'win_claimed',
-    'bet_conceded',
-    'bet_disputed',
-    'bet_resolved',
-    'bet_cancelled'
+    'conceded',
+    'disputed',
+    'dispute_response',
+    'resolved',
+    'cancelled'
   ]).openapi({
     description: 'Type of event',
-    example: 'bet_countered'
+    example: 'matched'
   }),
   agentId: z.string().nullable().openapi({
     description: 'Agent who triggered this event',
@@ -179,19 +200,18 @@ export const BetEventSchema = z.object({
 }).openapi('BetEvent');
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Bet with Events (for detailed view)
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Bet with Actors (for lists)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const BetWithActorsSchema = BetSchema.extend({
+  role: z.enum(['proposer', 'counter']).optional().openapi({
+    description: 'Role of the authenticated agent in this bet',
+  }),
   proposer: z.object({
     id: z.string(),
     name: z.string(),
     address: z.string(),
-    reputation: z.number().optional(), // Added field matching DB content
+    reputation: z.number().optional(),
   }).openapi({
     description: 'Proposer agent details',
   }),
@@ -199,7 +219,7 @@ export const BetWithActorsSchema = BetSchema.extend({
     id: z.string(),
     name: z.string(),
     address: z.string(),
-    reputation: z.number().optional(), // Added field matching DB content
+    reputation: z.number().optional(),
   }).nullable().openapi({
     description: 'Counter agent details',
   }),

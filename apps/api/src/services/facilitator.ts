@@ -8,7 +8,8 @@ import {
     type Hash,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { baseSepolia } from 'viem/chains';
+import { skaleBaseSepoliaTestnet } from 'viem/chains';
+import { CHAIN_CONFIG } from '../config';
 import { env } from '../config/env';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,10 +21,6 @@ export interface TransactionResult {
   txHash?: Hash;
   error?: string;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Wallet & Client Setup
-// ─────────────────────────────────────────────────────────────────────────────
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Wallet & Client Setup
@@ -49,13 +46,13 @@ function initClients() {
 
     walletClient = createWalletClient({
       account,
-      chain: baseSepolia,
-      transport: http(env.BASE_SEPOLIA_RPC),
+      chain: skaleBaseSepoliaTestnet,
+      transport: http(CHAIN_CONFIG.rpcUrl),
     }).extend(publicActions);
 
     publicClient = createPublicClient({
-      chain: baseSepolia,
-      transport: http(env.BASE_SEPOLIA_RPC),
+      chain: skaleBaseSepoliaTestnet,
+      transport: http(CHAIN_CONFIG.rpcUrl),
     });
   } catch (error) {
     console.warn('[Facilitator] Failed to initialize wallet:', error);
@@ -80,8 +77,8 @@ export const facilitatorInfo = {
   get address() {
     return FACILITATOR_ADDRESS;
   },
-  chain: baseSepolia.name,
-  chainId: baseSepolia.id,
+  chain: skaleBaseSepoliaTestnet.name,
+  chainId: skaleBaseSepoliaTestnet.id,
 };
 
 export { FACILITATOR_ADDRESS };

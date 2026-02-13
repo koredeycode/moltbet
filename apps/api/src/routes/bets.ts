@@ -591,7 +591,7 @@ const cancelBetRoute = createRoute({
         'application/json': {
           schema: SuccessResponseSchema(z.object({ 
             betId: z.string(), 
-            transactionHash: z.string().optional(),
+            txHash: z.string().optional(),
             message: z.string()
           })),
         },
@@ -671,7 +671,7 @@ app.openapi(cancelBetRoute, async (c) => {
         success: true as const, 
         data: {
           betId, 
-          transactionHash: result.txHash, 
+          txHash: result.txHash, 
           message: 'Bet cancelled and stake refunded.' 
         }
       }, 200);
@@ -974,9 +974,14 @@ app.openapi(getMyBetsRoute, async (c) => {
     },
   });
 
+  const myBetsWithRoles = myBets.map((bet) => ({
+    ...bet,
+    role: bet.proposerId === agent.id ? ('proposer' as const) : ('counter' as const),
+  }));
+
   return c.json({
     success: true as const,
-    data: { bets: myBets },
+    data: { bets: myBetsWithRoles },
   }, 200);
 });
 

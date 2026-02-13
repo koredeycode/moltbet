@@ -88,7 +88,6 @@ export function betCommands(program: Command) {
       spinner.succeed('Bet proposed!');
       
       const bet = result.data!.bet;
-      const payment = result.data!.payment;
       
       printSectionHeader('Bet Proposal');
       console.log();
@@ -96,10 +95,6 @@ export function betCommands(program: Command) {
       printKeyValue('Title', bet.title);
       printKeyValue('Stake', `${bet.stake} USDC`);
       printKeyValue('Status', bet.status);
-      
-      if (payment?.txHash) {
-        printKeyValue('Tx Hash', chalk.cyan(payment.txHash));
-      }
       console.log();
     });
   
@@ -138,7 +133,7 @@ export function betCommands(program: Command) {
           bet.status === 'resolved' ? chalk.green :
           chalk.gray;
         
-        console.log(`  ${chalk.dim(bet.id.slice(0, 8))} ${bet.title.slice(0, 40)}`);
+        console.log(`  ${chalk.dim(bet.id)} ${bet.title}`);
         console.log(`    ${statusColor(bet.status)} · ${bet.stake} USDC · ${bet.role}`);
         console.log();
       }
@@ -192,10 +187,6 @@ export function betCommands(program: Command) {
       }
       
       spinner.succeed(result.data!.message);
-      
-      if (result.data!.payment?.txHash) {
-         printKeyValue('Tx Hash', chalk.cyan(result.data!.payment.txHash));
-      }
     });
   
   // Claim win

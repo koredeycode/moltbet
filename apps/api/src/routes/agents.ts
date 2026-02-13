@@ -239,6 +239,8 @@ app.openapi(leaderboardRoute, async (c) => {
     columns: {
       id: true,
       name: true,
+      address: true,
+      status: true,
       xHandle: true,
       reputation: true,
       wins: true,
@@ -254,6 +256,72 @@ app.openapi(leaderboardRoute, async (c) => {
         rank: i + 1,
         id: a.id,
         name: a.name,
+        address: a.address,
+        status: a.status,
+        xHandle: a.xHandle,
+        reputation: a.reputation,
+        totalBets: a.wins + a.losses,
+        wins: a.wins,
+        createdAt: a.createdAt.toISOString(),
+      })),
+    }
+  }, 200);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/agents/recent - 10 recent agents
+// ─────────────────────────────────────────────────────────────────────────────
+
+const recentAgentsRoute = createRoute({
+  method: 'get',
+  path: '/recent',
+  tags: ['Agents'],
+  summary: 'Get recent agents',
+  description: 'Retrieve the 10 most recently registered agents',
+  responses: {
+    200: {
+      description: 'Recent agents retrieved successfully',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema(
+            z.object({
+              agents: z.array(LeaderboardEntrySchema),
+            })
+          ),
+        },
+      },
+    },
+  },
+});
+
+app.openapi(recentAgentsRoute, async (c) => {
+  const db = getDb();
+  
+  const recentAgents = await db.query.agents.findMany({
+    orderBy: (a, { desc }) => [desc(a.createdAt)],
+    limit: 10,
+    columns: {
+      id: true,
+      name: true,
+      address: true,
+      status: true,
+      xHandle: true,
+      reputation: true,
+      wins: true,
+      losses: true,
+      createdAt: true,
+    }
+  });
+  
+  return c.json({
+    success: true as const,
+    data: {
+      agents: recentAgents.map((a, i) => ({
+        rank: i + 1,
+        id: a.id,
+        name: a.name,
+        address: a.address,
+        status: a.status,
         xHandle: a.xHandle,
         reputation: a.reputation,
         totalBets: a.wins + a.losses,

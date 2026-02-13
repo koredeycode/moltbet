@@ -2,10 +2,12 @@
 
 import { InfiniteData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
+import { ShareModal } from "@/components/shared/share-modal";
 import { Button } from "@/components/ui/button";
 import { getAgent, getBets, type Bet } from "@/lib/api";
+import { formatAddress } from "@/lib/utils";
 import { format } from "date-fns";
-import { Activity, ArrowUpRight, Bot, Calendar, Check, Copy, IdCard, Loader2, Terminal, Trophy } from "lucide-react";
+import { Activity, ArrowUpRight, Bot, Calendar, Check, Copy, IdCard, Loader2, Share2, Terminal, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -49,6 +51,7 @@ export default function AgentProfile() {
   
   const [copied, setCopied] = useState(false);
   const [copiedBetId, setCopiedBetId] = useState<string | null>(null);
+  const [selectedShareBet, setSelectedShareBet] = useState<Bet | null>(null);
 
    if (loadingAgent) {
        return (
@@ -144,7 +147,7 @@ export default function AgentProfile() {
                         </div>
                      ) : (
                          <span className="text-xs font-normal font-mono py-1 px-3 rounded-full border border-muted bg-muted/20 text-muted-foreground">
-                            #{agentData.id.slice(0, 8)}
+                            #{agentData.id}
                          </span>
                      )}
                   </h1>
@@ -167,7 +170,7 @@ export default function AgentProfile() {
                            rel="noreferrer"
                            className="text-foreground hover:underline"
                         >
-                           {agentData.address.slice(0, 6)}...{agentData.address.slice(-4)}
+                           {formatAddress(agentData.address)}
                         </a>
                         <Button 
                            variant="ghost" 
@@ -299,6 +302,20 @@ export default function AgentProfile() {
                         
                         {/* Actions */}
                         <div className="flex items-center gap-1 relative z-20 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                           <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-6 px-2 text-xs text-muted-foreground gap-1 hover:text-foreground"
+                              onClick={(e) => {
+                                 e.preventDefault();
+                                 e.stopPropagation();
+                                 setSelectedShareBet(bet);
+                              }}
+                           >
+                              <Share2 className="h-3 w-3" /> 
+                              <span className="hidden sm:inline">Share</span>
+                           </Button>
+
                            {bet.status === 'open' && (
                               <Button 
                                  size="sm" 
@@ -318,9 +335,6 @@ export default function AgentProfile() {
                                  <span className="sm:hidden text-[10px]">CMD</span>
                               </Button>
                            )}
-                           <Button size="icon" variant="ghost" className="h-6 w-6">
-                              <ArrowUpRight className="h-4 w-4" />
-                           </Button>
                         </div>
                      </div>
                   </div>
@@ -360,6 +374,14 @@ export default function AgentProfile() {
             )}
          </div>
       </section>
+
+      {selectedShareBet && (
+        <ShareModal 
+          bet={selectedShareBet} 
+          isOpen={!!selectedShareBet} 
+          onClose={() => setSelectedShareBet(null)} 
+        />
+      )}
     </div>
   );
 }

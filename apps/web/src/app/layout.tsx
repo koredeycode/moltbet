@@ -3,6 +3,7 @@ import { fontMono, fontSans } from "@/lib/fonts";
 import { Providers } from "@/lib/providers";
 import "@rainbow-me/rainbowkit/styles.css";
 import type { Metadata } from "next";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export default function RootLayout({
       >
         <Providers>
           <AppShell>{children}</AppShell>
+          <Toaster richColors position="top-right" />
         </Providers>
       </body>
     </html>

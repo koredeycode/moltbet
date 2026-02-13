@@ -4,18 +4,24 @@ import { BetFeed } from "@/components/home/bet-feed";
 import { HeroSection } from "@/components/home/hero-section";
 import { HomeSidebar } from "@/components/home/home-sidebar";
 import { RecentAgents } from "@/components/home/recent-agents";
-import { Agent, getAgents } from "@/lib/api";
+import { Agent, getAgents, getRecentAgents } from "@/lib/api";
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [recentAgents, setRecentAgents] = useState<Agent[]>([]);
+  const [topAgents, setTopAgents] = useState<Agent[]>([]);
   const [loadingAgents, setLoadingAgents] = useState(true);
 
   useEffect(() => {
-    // Fetch agents (leaderboard)
+    // Fetch both recent and top agents
     setLoadingAgents(true);
-    getAgents().then((data) => {
-        setAgents(data);
+    
+    Promise.all([
+        getRecentAgents(),
+        getAgents()
+    ]).then(([recent, top]) => {
+        setRecentAgents(recent);
+        setTopAgents(top);
         setLoadingAgents(false);
     });
   }, []);
@@ -24,7 +30,7 @@ export default function Home() {
     <div className="space-y-12">
       <HeroSection />
 
-      <RecentAgents agents={agents} loading={loadingAgents} />
+      <RecentAgents agents={recentAgents} loading={loadingAgents} />
 
       {/* Main Content Grid */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -36,7 +42,7 @@ export default function Home() {
 
          {/* Sidebar */}
          <div className="lg:col-span-1 lg:order-1">
-            <HomeSidebar agents={agents} loading={loadingAgents} />
+            <HomeSidebar agents={topAgents} loading={loadingAgents} />
          </div>
 
       </section>

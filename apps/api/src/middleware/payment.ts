@@ -3,29 +3,32 @@ import { HTTPFacilitatorClient } from '@x402/core/server';
 import type { Network } from '@x402/core/types';
 import { ExactEvmScheme } from '@x402/evm/exact/server';
 import { paymentMiddleware, x402ResourceServer } from '@x402/hono';
-import { baseSepolia } from 'viem/chains';
 import { env } from '../config/env';
-import { FACILITATOR_ADDRESS } from '../services/facilitator';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// x402 Resource Server Setup
+// Configuration (Aligned with Skale Docs structure)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const facilitatorClient = new HTTPFacilitatorClient({
-  url: env.FACILITATOR_URL,
-});
+const facilitatorUrl = env.FACILITATOR_URL;
+const receivingAddress = env.RECEIVING_ADDRESS as `0x${string}`;
+const paymentTokenAddress = env.USDC_ADDRESS as `0x${string}`;
+const paymentTokenName = "Bridged USDC (SKALE Bridge)";
+const networkChainId = env.NETWORK_CHAIN_ID || "324705682";
+const network: Network = `eip155:${networkChainId}`;
 
+// Setup facilitator client and resource server
+console.log(`Connecting to Facilitator at: ${facilitatorUrl} for network: ${network}`);
+const facilitatorClient = new HTTPFacilitatorClient({ url: facilitatorUrl });
 const resourceServer = new x402ResourceServer(facilitatorClient);
 
-// Register the exact EVM scheme for all EIP-155 networks
-resourceServer.register('eip155:*', new ExactEvmScheme());
+// Register the exact scheme for EVM networks
+// resourceServer.register("eip155:*", new ExactEvmScheme());
+
+resourceServer.register(network, new ExactEvmScheme());
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Payment Configuration Helpers
 // ─────────────────────────────────────────────────────────────────────────────
-
-const NETWORK: Network = `eip155:${baseSepolia.id}`;
-const USDC_ADDRESS = env.USDC_ADDRESS as `0x${string}`;
 
 /**
  * Create standard x402 payment requirements for a given USDC amount
@@ -41,14 +44,14 @@ export function createPaymentRequirements(
     accepts: [
       {
         scheme: 'exact' as const,
-        network: NETWORK,
-        payTo: FACILITATOR_ADDRESS as `0x${string}`,
+        network: network,
+        payTo: receivingAddress,
         price: {
           amount: amountInUnits,
-          asset: USDC_ADDRESS,
+          asset: paymentTokenAddress,
           extra: {
-            name: 'USD Coin',
-            version: '2',
+            name: paymentTokenName,
+            version: "2",
           },
         },
       },
@@ -60,9 +63,6 @@ export function createPaymentRequirements(
 
 /**
  * Create x402 payment middleware for a specific route with a given stake
- * 
- * Usage:
- *   app.use('/route', createStakeMiddleware('10.00', 'Bet stake payment'))
  */
 export function createStakeMiddleware(stakeUsdc: string, description: string) {
   const config = createPaymentRequirements(stakeUsdc, description);
@@ -71,4 +71,3 @@ export function createStakeMiddleware(stakeUsdc: string, description: string) {
 }
 
 export { facilitatorClient, resourceServer };
-

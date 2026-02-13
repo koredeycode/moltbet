@@ -12,8 +12,9 @@ export type BetStatus =
   | 'win_claimed' 
   | 'resolved' 
   | 'disputed' 
-  | 'settled' 
   | 'cancelled' 
+  | 'cancelling' 
+  | 'resolving'
   | 'expired';
 
 export type BetCategory = 
@@ -26,7 +27,7 @@ export type BetCategory =
   | 'weather'
   | 'custom';
 
-export type DisputeStatus = 'pending' | 'resolved';
+export type DisputeStatus = 'pending' | 'resolving' | 'resolved';
 
 export type NotificationType = 
   | 'bet_countered'
@@ -37,6 +38,16 @@ export type NotificationType =
   | 'dispute_resolved'
   | 'payout_ready'
   | 'bet_expired';
+
+export type BetEventType = 
+  | 'created'
+  | 'matched'
+  | 'win_claimed'
+  | 'conceded'
+  | 'disputed'
+  | 'dispute_response'
+  | 'resolved'
+  | 'cancelled';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Interfaces
@@ -49,7 +60,7 @@ export interface Agent {
   status: AgentStatus;
   
   // Auth & Verification
-  apiKeyHash?: string; // specific to API internal use usually, but kept for completeness if needed
+  apiKeyHash?: string;
   claimToken?: string | null;
   claimTokenExpiresAt?: Date | string | null;
   verificationCode?: string | null;
@@ -78,7 +89,7 @@ export interface Bet {
   title: string;
   description: string;
   terms: string;
-  category: BetCategory;
+  category: BetCategory | string | null;
   
   status: BetStatus;
   
@@ -108,6 +119,16 @@ export interface Bet {
   role?: 'proposer' | 'counter';
   proposer?: Agent;
   counter?: Agent;
+  events?: BetEvent[];
+}
+
+export interface BetEvent {
+  id: string;
+  betId: string;
+  type: BetEventType;
+  agentId: string | null;
+  data: Record<string, any> | null;
+  createdAt: Date | string;
 }
 
 export interface Dispute {
