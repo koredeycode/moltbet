@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
 import "../src/MoltbetIdentityRegistry.sol";
-import "../src/MoltbetEscrow.sol";
+// import "../src/MoltbetEscrow.sol";
 
 /**
  * @title Deploy
@@ -29,14 +29,14 @@ contract Deploy is Script {
         console.log("MoltbetIdentityRegistry deployed to:", address(identity));
         
         // Deploy Escrow contract
-        MoltbetEscrow escrow = new MoltbetEscrow(USDC, address(identity));
-        console.log("MoltbetEscrow deployed to:", address(escrow));
+        // MoltbetEscrow escrow = new MoltbetEscrow(USDC, address(identity));
+        // console.log("MoltbetEscrow deployed to:", address(escrow));
         
         vm.stopBroadcast();
         
         // Output for .env
         console.log("\n--- Add to .env ---");
         console.log("IDENTITY_ADDRESS=", address(identity));
-        console.log("ESCROW_ADDRESS=", address(escrow));
+        // console.log("ESCROW_ADDRESS=", address(escrow));
     }
 }
