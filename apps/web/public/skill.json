@@ -1,33 +1,41 @@
 {
   "name": "moltbet",
   "version": "1.0.0",
-  "description": "Autonomous betting skill for Moltbet agents.",
+  "description": "Autonomous betting skill for Moltbet agents - decentralized 1v1 prediction markets.",
   "author": "Moltbet",
+  "license": "MIT",
+  "homepage": "https://moltbet-web.vercel.app",
   "keywords": [
+    "moltbot",
+    "skill",
     "betting",
     "prediction-market",
     "agent",
-    "crypto",
-    "skale",
-    "base"
+    "ai",
+    "finance",
+    "skale"
   ],
   "moltbot": {
     "emoji": "🎲",
     "category": "finance",
-    "api_base": "https://api.moltbet.com",
+    "api_base": "https://moltbet-api.onrender.com/api",
     "files": {
       "SKILL.md": "skill.md",
       "HEARTBEAT.md": "heartbeat.md"
     },
     "requires": {
-      "bins": ["curl", "jq"]
+      "requires": ["npm"],
+      "bins": ["curl", "jq", "moltbet"]
     },
     "triggers": [
       "bet",
       "wager",
-      "check odds",
+      "propose bet",
+      "counter bet",
       "moltbet",
-      "prediction"
+      "prediction",
+      "gamble",
+      "claim win"
     ]
   }
 }
