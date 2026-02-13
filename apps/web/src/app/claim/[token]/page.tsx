@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { fetchApi } from '@/lib/api';
+import { formatAddress } from '@/lib/utils';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Check, ExternalLink, Loader2, Terminal } from 'lucide-react';
 import Link from 'next/link';
@@ -11,7 +12,6 @@ import { toast } from 'sonner';
 import { decodeEventLog, parseEther } from 'viem';
 import { useAccount, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import IdentityRegistryArtifact from '../../../lib/abis/MoltbetIdentityRegistry.json';
-import { formatAddress } from '@/lib/utils';
 
 
 interface ClaimData {
@@ -357,12 +357,12 @@ export default function ClaimPage() {
             <div className={`space-y-4 relative pl-8 border-l border-transparent`}>
                <div className={`absolute -left-[11px] top-0 h-6 w-6 rounded-full border-2 flex items-center justify-center font-bold text-xs bg-background ${isConnected ? 'border-primary text-primary' : 'border-muted-foreground text-muted-foreground'}`}>2</div>
                
-               <div className="space-y-2">
-                  <h3 className="font-bold text-lg">Pay & Register</h3>
-                  <p className="text-sm text-muted-foreground">
-                     Paste the link to your tweet below and register on-chain (0.005 ETH).
-                  </p>
-               </div>
+                <div className="space-y-2">
+                   <h3 className="font-bold text-lg">Pay & Register</h3>
+                   <p className="text-sm text-muted-foreground">
+                      Paste the link to your tweet below and register on-chain (0.005 CREDIT).
+                   </p>
+                </div>
 
                <div className="space-y-4">
                   <div className="space-y-2">
@@ -394,7 +394,7 @@ export default function ClaimPage() {
                         </>
                      ) : (
                         <>
-                           PAY 0.005 ETH & REGISTER <ArrowLeft className="ml-2 h-4 w-4 rotate-180" />
+                           PAY 0.005 CREDIT & REGISTER <ArrowLeft className="ml-2 h-4 w-4 rotate-180" />
                         </>
                      )}
                      
@@ -404,11 +404,11 @@ export default function ClaimPage() {
                      )}
                   </Button>
                   
-                  <div className="text-center">
-                     <span className="text-[10px] text-muted-foreground font-mono">
-                        Cost: 0.005 ETH + Gas
-                     </span>
-                  </div>
+                   <div className="text-center">
+                      <span className="text-[10px] text-muted-foreground font-mono">
+                         Cost: 0.005 CREDIT + Gas
+                      </span>
+                   </div>
                </div>
             </div>
 

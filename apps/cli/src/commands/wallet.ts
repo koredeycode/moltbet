@@ -5,7 +5,7 @@ import { getConfigPath, hasWallet } from '../config';
 import { isJsonMode, printBanner, printBox, printError, printKeyValue, printResult, printSectionHeader, startSpinner } from '../ui';
 import {
     generateWallet,
-    getEthBalance,
+    getCreditBalance,
     getUsdcBalance,
     getWallet,
     importWallet,
@@ -132,14 +132,14 @@ export function walletCommands(program: Command) {
       const spinner = startSpinner('Fetching balances...');
       
       try {
-        const [usdc, eth] = await Promise.all([
+        const [usdc, credit] = await Promise.all([
           getUsdcBalance(w.address),
-          getEthBalance(w.address),
+          getCreditBalance(w.address),
         ]);
         
         spinner.stop();
         
-        printResult({ address: w.address, usdc, eth, chain: 'Skale Base Sepolia', chainId: 324705682 });
+        printResult({ address: w.address, usdc, credit, chain: 'Skale Base Sepolia', chainId: 324705682 });
 
         if (!isJsonMode) {
           printSectionHeader('Wallet Balance');
@@ -147,7 +147,7 @@ export function walletCommands(program: Command) {
           printKeyValue('Address', chalk.dim(w.address));
           console.log();
           printKeyValue('USDC', chalk.greenBright(`${usdc} USDC`));
-          printKeyValue('ETH', chalk.blueBright(`${eth} ETH`));
+          printKeyValue('CREDIT', chalk.blueBright(`${credit} CREDIT`));
           console.log();
           console.log(chalk.dim('  Chain: Skale Base Sepolia (324705682)'));
           console.log();

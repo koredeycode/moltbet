@@ -1,5 +1,5 @@
 // Chain configuration for Skale Base Sepolia
-import { skaleBaseSepoliaTestnet } from 'viem/chains';
+import { skaleBaseSepoliaTestnet } from '@moltbet/shared';
 import './env'; // Ensure dotenv is loaded
 
 export const CHAIN_CONFIG = {

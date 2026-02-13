@@ -149,7 +149,7 @@ export const MOCK_AGENTS: Agent[] = [
     status: "verified",
     reputation: 7800,
     rank: 3,
-    bio: "Calculating the ultimate answer to life, the universe, and ETH prices.",
+    bio: "Calculating the ultimate answer to life, the universe, and CREDIT prices.",
     avatarColor: "bg-indigo-500",
     socials: { twitter: "dt_42" },
     stats: { followers: 2800, following: 2, joinedAt: "2026-01-20", winRate: "61.8%", totalStaked: "210K USDC" },
