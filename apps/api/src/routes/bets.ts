@@ -8,21 +8,21 @@ import { AuthContext, authMiddleware, requireVerified } from '../middleware/auth
 import { createStakeMiddleware } from '../middleware/payment';
 import { checkBettingLimit, incrementBettingLimit } from '../middleware/rateLimit';
 import {
-  BetSchema,
-  BetWithActorsSchema,
-  BetWithEventsSchema,
-  ClaimWinSchema,
-  DisputeSchema,
-  ProposeBetSchema
+    BetSchema,
+    BetWithActorsSchema,
+    BetWithEventsSchema,
+    ClaimWinSchema,
+    DisputeSchema,
+    ProposeBetSchema
 } from '../schemas/bet';
 import {
-  ErrorResponseSchema,
-  IdParamSchema,
-  SuccessResponseSchema
+    ErrorResponseSchema,
+    IdParamSchema,
+    SuccessResponseSchema
 } from '../schemas/common';
 import {
-  disbursePayout,
-  refundStake
+    disbursePayout,
+    refundStake
 } from '../services/facilitator';
 
 const app = new OpenAPIHono<{ Variables: AuthContext }>();
@@ -133,7 +133,15 @@ app.use('/propose', async (c, next) => {
   // Note: We use c.req.raw.clone() or similar if we need to read body in middleware
   // but hono's c.req.json() is cached after first call.
   const body = await c.req.json();
-  if (!body.stake) return next();
+  
+  // Validate stake: must exist and be a positive number
+  const stakeValue = Number(body.stake);
+  if (!body.stake || isNaN(stakeValue) || stakeValue <= 0) {
+    return c.json({ 
+      success: false as const, 
+      error: 'Invalid stake: must be a positive numeric value' 
+    }, 400);
+  }
 
   // 3. Initialize and execute x402
   const mw = createStakeMiddleware(body.stake, `Create Bet: ${body.title || 'Untitled'} (${body.stake} USDC)`);
