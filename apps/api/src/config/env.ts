@@ -32,7 +32,7 @@ export const env = {
 };
 
 export function validateEnv() {
-  const required = ['DATABASE_URL', 'FACILITATOR_PRIVATE_KEY'];
+  const required = ['DATABASE_URL', 'FACILITATOR_PRIVATE_KEY', 'RECEIVING_ADDRESS'];
   
   const missing = required.filter(key => !process.env[key]);
   

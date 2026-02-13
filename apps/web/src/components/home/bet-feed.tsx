@@ -3,7 +3,7 @@
 
 import { ShareModal } from "@/components/shared/share-modal";
 import { Button } from "@/components/ui/button";
-import { getBets } from "@/lib/api";
+import { getBets, type Bet } from "@/lib/api";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Activity, Check, Copy, Share2 } from "lucide-react";
 import Link from "next/link";
@@ -11,7 +11,7 @@ import { useState } from "react";
 
 export function BetFeed() {
   const [filter, setFilter] = useState('all');
-  const [selectedShareBet, setSelectedShareBet] = useState<any | null>(null);
+  const [selectedShareBet, setSelectedShareBet] = useState<Bet | null>(null);
 
   const { 
     data, 

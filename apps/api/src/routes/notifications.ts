@@ -1,6 +1,6 @@
 // Notification routes
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq } from 'drizzle-orm';
 import { getDb, notifications } from '../db';
 import { AuthContext, authMiddleware } from '../middleware/auth';
 import { ErrorResponseSchema, IdParamSchema, SuccessResponseSchema } from '../schemas/common';
@@ -58,20 +58,36 @@ app.openapi(getNotificationsRoute, async (c) => {
     orderBy: desc(notifications.createdAt),
     limit: Math.min(limit, 100),
   });
+
+  const [unreadCountResult] = await db
+    .select({ value: count() })
+    .from(notifications)
+    .where(and(eq(notifications.agentId, agent.id), eq(notifications.read, false)));
   
   return c.json({
     success: true,
     data: {
-      notifications: agentNotifications.map(n => ({
-        id: n.id,
-        type: n.type,
-        message: n.message,
-        betId: n.betId,
-        read: n.read,
-        createdAt: n.createdAt.toISOString(),
-        metadata: n.metadata ? JSON.parse(n.metadata) : null,
-      })),
-      unreadCount: agentNotifications.filter(n => !n.read).length,
+      notifications: agentNotifications.map(n => {
+        let metadata = null;
+        if (n.metadata) {
+          try {
+            metadata = JSON.parse(n.metadata);
+          } catch (e) {
+            console.error(`Failed to parse metadata for notification ${n.id}:`, e);
+          }
+        }
+        
+        return {
+          id: n.id,
+          type: n.type,
+          message: n.message,
+          betId: n.betId,
+          read: n.read,
+          createdAt: n.createdAt.toISOString(),
+          metadata,
+        };
+      }),
+      unreadCount: unreadCountResult?.value ?? 0,
     }
   }, 200);
 });
@@ -89,12 +105,12 @@ const markReadRoute = createRoute({
   request: {
     params: IdParamSchema,
   },
-  responses: {
+    responses: {
     200: {
       description: 'Marked as read',
       content: {
         'application/json': {
-          schema: z.object({ success: z.boolean() }),
+          schema: SuccessResponseSchema(z.object({})),
         },
       },
     },
@@ -122,7 +138,7 @@ app.openapi(markReadRoute, async (c) => {
     .set({ read: true })
     .where(eq(notifications.id, notificationId));
   
-  return c.json({ success: true }, 200);
+  return c.json({ success: true, data: {} }, 200);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -140,7 +156,7 @@ const markAllReadRoute = createRoute({
       description: 'All notifications marked as read',
       content: {
         'application/json': {
-          schema: z.object({ success: z.boolean() }),
+          schema: SuccessResponseSchema(z.object({})),
         },
       },
     },
@@ -158,7 +174,7 @@ app.openapi(markAllReadRoute, async (c) => {
       eq(notifications.read, false)
     ));
   
-  return c.json({ success: true }, 200);
+  return c.json({ success: true, data: {} }, 200);
 });
 
 export default app;

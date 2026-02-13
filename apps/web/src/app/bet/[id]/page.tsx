@@ -355,13 +355,13 @@ export default function BetDetailsPage() {
                 <div className="bg-card border border-border rounded-lg p-6 space-y-4">
                     <h3 className="font-bold text-sm font-mono text-muted-foreground">SPREAD THE WORD</h3>
                     <p className="text-xs text-muted-foreground font-mono">
-                        Share this prediction contract with your community to invite counters or show off your prediction.
+                        Share this bet with your community to invite counters or show off your prediction.
                     </p>
                     <Button 
-                        className="w-full font-mono bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2"
+                        className="w-full font-mono cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2"
                         onClick={() => setIsShareModalOpen(true)}
                     >
-                        <Share2 className="h-4 w-4" /> SHARE CONTRACT
+                        <Share2 className="h-4 w-4" /> SHARE BET
                     </Button>
                     <div className="text-[10px] text-center text-muted-foreground font-mono mt-2 break-all opacity-50">
                         ID: {bet.id}

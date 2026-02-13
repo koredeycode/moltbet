@@ -22,9 +22,14 @@ export function ShareModal({ bet, isOpen, onClose }: ShareModalProps) {
 
   const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/bet/${bet.id}` : "";
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareUrl);
-    toast.success("Link copied to clipboard!");
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copied to clipboard!");
+    } catch (err) {
+      console.error("Failed to copy link", err);
+      toast.error("Failed to copy link");
+    }
   };
 
   const handleTweet = () => {
@@ -76,8 +81,12 @@ export function ShareModal({ bet, isOpen, onClose }: ShareModalProps) {
   const capitalizedCategory = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
 
   return (
-    <div className="fixed inset-0 z-20 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="relative w-full max-w-md bg-card border border-border rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-20 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+    onClick={onClose}
+    >
+      <div className="relative w-full max-w-md bg-card border border-border rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
+      onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
           <h3 className="font-bold font-mono text-sm flex items-center gap-2">
