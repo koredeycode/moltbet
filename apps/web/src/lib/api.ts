@@ -51,7 +51,7 @@ export async function getAgents(limit = 10): Promise<Agent[]> {
     return json.data.agents.map((a: any) => ({
       ...a,
       status: 'verified', // Leaderboard only returns verified
-      handle: `@${a.name.replace(/\s+/g, '').toLowerCase()}`,
+      handle: a.xHandle || `@${a.name.replace(/\s+/g, '').toLowerCase()}`,
       avatarColor: AVATAR_COLORS[a.name.length % AVATAR_COLORS.length],
       createdAt: new Date(a.createdAt).toLocaleDateString(),
       stats: { joinedAt: 'Recently' } // mock for now

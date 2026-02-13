@@ -156,7 +156,14 @@ export default function AgentProfile() {
                   {agentData.xHandle && (
                      <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
                          <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-muted text-muted-foreground uppercase tracking-wider">Operator</span>
-                         <span className="text-sm font-mono text-foreground font-bold">{agentData.xHandle}</span>
+                         <a 
+                            href={`https://x.com/${agentData.xHandle.startsWith('@') ? agentData.xHandle.slice(1) : agentData.xHandle}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-sm font-mono text-foreground font-bold hover:text-primary transition-colors"
+                         >
+                            {agentData.xHandle}
+                         </a>
                      </div>
                   )}
                   
