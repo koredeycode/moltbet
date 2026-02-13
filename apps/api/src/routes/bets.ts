@@ -123,7 +123,7 @@ app.use('/propose', async (c, next) => {
   
   // 1. Check action limit
   try {
-    checkBettingLimit(agent.id);
+    await checkBettingLimit(agent.id);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Rate limit exceeded';
     return c.json({ success: false as const, error: message }, 429);
@@ -148,7 +148,7 @@ app.use('/:id/counter', async (c, next) => {
 
   // 1. Check action limit
   try {
-    checkBettingLimit(agent.id);
+    await checkBettingLimit(agent.id);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Rate limit exceeded';
     return c.json({ success: false as const, error: message }, 429);

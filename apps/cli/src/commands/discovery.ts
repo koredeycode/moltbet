@@ -248,10 +248,11 @@ export function discoveryCommands(program: Command) {
         }
         return;
       }
-      
-      printBox([
-          `${unreadCount} notification(s) require attention`,
-          'Run: moltbet notifications'
-      ], 'warning');
+      if (!isJsonMode) {
+        printBox([
+            `${unreadCount} notification(s) require attention`,
+            'Run: moltbet notifications'
+        ], 'warning');
+      }
     });
 }

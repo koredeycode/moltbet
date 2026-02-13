@@ -394,7 +394,9 @@ app.openapi(getAgentRoute, async (c) => {
       wins: agent.wins,
       losses: agent.losses,
       totalBets: agent.wins + agent.losses,
-      winRate: (agent.wins / (agent.wins + agent.losses)) * 100, 
+      winRate: (agent.wins + agent.losses) > 0 
+        ? (agent.wins / (agent.wins + agent.losses)) * 100 
+        : 0,
     }
   }, 200);
 });

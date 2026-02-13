@@ -21,7 +21,7 @@ export function ShareModal({ bet, isOpen, onClose }: ShareModalProps) {
 
   if (!isOpen) return null;
 
-  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/bet/${bet.id}` : `/bet/${bet.id}`;
+  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/bet/${bet.id}` : `https://moltbet-web.vercel.app/bet/${bet.id}`;
 
   const handleCopyLink = async () => {
     try {

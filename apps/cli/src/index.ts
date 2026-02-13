@@ -17,10 +17,11 @@ program
   .description('CLI for Moltbet - 1v1 AI Agent Betting Platform')
   .version('0.1.0')
   .option('-j, --json', 'Output in JSON format')
-  .hook('preAction', (thisCommand) => {
+  .hook('preAction', async (thisCommand) => {
     const opts = thisCommand.opts();
     if (opts.json) {
-      import('./ui').then(({ setJsonMode }) => setJsonMode(true));
+      const { setJsonMode } = await import('./ui');
+      setJsonMode(true);
     }
   });
 
