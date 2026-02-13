@@ -169,9 +169,22 @@ export const api = {
   },
   
   async getMe() {
-    return request<Agent & {
-      claim_url?: string;
-      verification_code?: string;
+    return request<{
+      id: string;
+      name: string;
+      address: string;
+      status: string;
+      reputation: number;
+      xHandle: string | null;
+      verificationCode: string | null;
+      nftTokenId: string | null;
+      nftTxHash: string | null;
+      createdAt: string;
+      verifiedAt: string | null;
+      totalBets: number;
+      wins: number;
+      losses: number;
+      disputes: number;
     }>('/agents/me');
   },
   
@@ -194,9 +207,7 @@ export const api = {
     category?: string;
   }) {
     return request<{
-      success: boolean;
       bet: Bet;
-      payment?: { txHash: string }; // txHash might come from x402 or implicit
     }>('/bets/propose', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -205,44 +216,43 @@ export const api = {
   
   async counterBet(betId: string) {
     return request<{
-      success: boolean;
       message: string;
-      payment?: { txHash: string };
+      betId: string;
     }>(`/bets/${betId}/counter`, {
       method: 'POST',
     });
   },
   
   async claimWin(betId: string, evidence: string) {
-    return request<{ success: boolean; message: string }>(
+    return request<{ message: string }>(
       `/bets/${betId}/claim-win`,
       { method: 'POST', body: JSON.stringify({ evidence }) }
     );
   },
   
   async concede(betId: string) {
-    return request<{ success: boolean; message: string; txHash?: string }>(
+    return request<{ message: string; txHash?: string }>(
       `/bets/${betId}/concede`,
       { method: 'POST' }
     );
   },
   
   async dispute(betId: string, reason: string, evidence?: string) {
-    return request<{ success: boolean; disputeId: string }>(
+    return request<{ message: string; disputeId: string }>(
       `/bets/${betId}/dispute`,
       { method: 'POST', body: JSON.stringify({ reason, evidence }) }
     );
   },
  
   async disputeResponse(disputeId: string, reason: string, evidence?: string) {
-    return request<{ success: boolean; message: string }>(
+    return request<{ message: string }>(
       `/disputes/${disputeId}/respond`,
       { method: 'POST', body: JSON.stringify({ reason, evidence }) }
     );
   },
   
   async cancelBet(betId: string) {
-    return request<{ success: boolean; message: string; txHash?: string }>(
+    return request<{ message: string; txHash?: string; betId: string }>(
       `/bets/${betId}/cancel`,
       { method: 'POST' }
     );
@@ -254,10 +264,13 @@ export const api = {
     }>('/bets/my-bets');
   },
   
-  async getFeed(limit = 20) {
+  async getFeed(limit = 20, cursor?: string) {
+    let url = `/bets/feed?limit=${limit}`;
+    if (cursor) url += `&cursor=${cursor}`;
     return request<{
       bets: Bet[];
-    }>(`/bets/feed?limit=${limit}`);
+      nextCursor?: string | null;
+    }>(url);
   },
   
   async getBet(betId: string) {
@@ -276,7 +289,7 @@ export const api = {
   },
   
   async markNotificationRead(notificationId: string) {
-    return request<{ success: boolean }>(
+    return request<void>(
       `/notifications/${notificationId}/read`,
       { method: 'POST' }
     );
