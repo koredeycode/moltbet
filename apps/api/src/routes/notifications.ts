@@ -3,7 +3,7 @@ import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { and, desc, eq } from 'drizzle-orm';
 import { getDb, notifications } from '../db';
 import { AuthContext, authMiddleware } from '../middleware/auth';
-import { ErrorResponseSchema, IdParamSchema } from '../schemas/common';
+import { ErrorResponseSchema, IdParamSchema, SuccessResponseSchema } from '../schemas/common';
 import { NotificationSchema } from '../schemas/notification';
 
 const app = new OpenAPIHono<{ Variables: AuthContext }>();
@@ -32,10 +32,10 @@ const getNotificationsRoute = createRoute({
       description: 'List of notifications',
       content: {
         'application/json': {
-          schema: z.object({
+          schema: SuccessResponseSchema(z.object({
             notifications: z.array(NotificationSchema),
             unreadCount: z.number().openapi({ example: 5 }),
-          }),
+          })),
         },
       },
     },
@@ -60,16 +60,19 @@ app.openapi(getNotificationsRoute, async (c) => {
   });
   
   return c.json({
-    notifications: agentNotifications.map(n => ({
-      id: n.id,
-      type: n.type,
-      message: n.message,
-      betId: n.betId,
-      read: n.read,
-      createdAt: n.createdAt.toISOString(), // Ensure ISO string for Schema validation
-      metadata: n.metadata ? JSON.parse(n.metadata) : null,
-    })),
-    unreadCount: agentNotifications.filter(n => !n.read).length,
+    success: true,
+    data: {
+      notifications: agentNotifications.map(n => ({
+        id: n.id,
+        type: n.type,
+        message: n.message,
+        betId: n.betId,
+        read: n.read,
+        createdAt: n.createdAt.toISOString(),
+        metadata: n.metadata ? JSON.parse(n.metadata) : null,
+      })),
+      unreadCount: agentNotifications.filter(n => !n.read).length,
+    }
   }, 200);
 });
 

@@ -1,4 +1,4 @@
-import { BetCategory, BetStatus, Agent as SharedAgent, Bet as SharedBet } from '@moltbet/shared';
+import { Agent as SharedAgent, Bet as SharedBet } from '@moltbet/shared';
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -30,24 +30,15 @@ export async function fetchApi<T>(path: string, options: RequestInit = {}): Prom
 }
 
 export interface Agent extends SharedAgent {
-  avatarColor?: string; // Derived or fetched
-  handle?: string; // Derived or fetched from xHandle
+  avatarColor?: string;
+  handle?: string;
   winRate?: number;
 }
 
-export interface Bet extends Omit<SharedBet, 'status' | 'category' | 'proposer' | 'counter'> {
-  status: BetStatus;
-  category: BetCategory | string;
+export interface Bet extends SharedBet {
   token: string; // usually USDC
-  proposer: Partial<Agent>;
-  counter?: Partial<Agent>;
-  events?: {
-    id: string;
-    type: 'created' | 'matched' | 'win_claimed' | 'conceded' | 'disputed' | 'dispute_response' | 'resolved' | 'cancelled';
-    agent?: { name: string; id: string }; // specific fields we might need
-    data: any;
-    createdAt: string;
-  }[];
+  avatarColor?: string; // sometimes needed for quick reference
+  // Events are now included in SharedBet as any[] but we can refine here if needed
 }
 
 export async function getAgents(limit = 10): Promise<Agent[]> {

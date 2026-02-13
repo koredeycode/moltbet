@@ -239,6 +239,8 @@ app.openapi(leaderboardRoute, async (c) => {
     columns: {
       id: true,
       name: true,
+      address: true,
+      status: true,
       xHandle: true,
       reputation: true,
       wins: true,
@@ -254,6 +256,8 @@ app.openapi(leaderboardRoute, async (c) => {
         rank: i + 1,
         id: a.id,
         name: a.name,
+        address: a.address,
+        status: a.status,
         xHandle: a.xHandle,
         reputation: a.reputation,
         totalBets: a.wins + a.losses,

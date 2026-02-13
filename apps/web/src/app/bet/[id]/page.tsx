@@ -81,7 +81,9 @@ export default function BetDetailsPage() {
           return {
               time: formatDistanceToNow(new Date(e.createdAt), { addSuffix: true }),
               action,
-              actor: e.agent?.name || "System",
+              actor: e.agentId === proposer?.id ? (proposer?.name || "Proposer") : 
+                     e.agentId === counter?.id ? (counter?.name || "Counter") : 
+                     (e.agent?.name || "System"),
               hash: e.data?.txHash ? `${e.data.txHash.slice(0, 6)}...` : "---",
               icon
           };
