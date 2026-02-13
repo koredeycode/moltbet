@@ -1,9 +1,8 @@
 // Wallet commands - Simplified
 import chalk from 'chalk';
 import { Command } from 'commander';
-import ora from 'ora';
 import { getConfigPath, hasWallet } from '../config';
-import { printBanner, printBox, printKeyValue, printSectionHeader } from '../ui';
+import { isJsonMode, printBanner, printBox, printError, printKeyValue, printResult, printSectionHeader, startSpinner } from '../ui';
 import {
     generateWallet,
     getEthBalance,
@@ -25,16 +24,18 @@ export function walletCommands(program: Command) {
       printBanner();
       
       if (hasWallet()) {
-        printBox([
-            'A wallet already exists.',
-            'Use "moltbet wallet address" to see your address.',
-            'Or delete the config file to start fresh.'
-        ], 'warning');
+        const w = getWallet();
+        printError('A wallet already exists.', { 
+            tip: 'Use "moltbet wallet address" to see your address.',
+            address: w?.address
+        });
         return;
       }
       
       const { address, privateKey } = generateWallet();
       
+      printResult({ address, privateKey, configPath: getConfigPath() });
+
       printSectionHeader('Wallet Generated');
       console.log();
       printKeyValue('Address', address);
@@ -65,13 +66,14 @@ export function walletCommands(program: Command) {
       printBanner();
       try {
         const address = importWallet(privateKey);
+        printResult({ address, configPath: getConfigPath() });
         printBox([
             'Wallet imported successfully!',
             `Address: ${address}`,
             `Saved to: ${getConfigPath()}`
         ], 'success');
       } catch (err) {
-        printBox(`Failed to import wallet: ${(err as Error).message}`, 'error');
+        printError(`Failed to import wallet: ${(err as Error).message}`);
       }
     });
   
@@ -83,11 +85,14 @@ export function walletCommands(program: Command) {
       const w = getWallet();
       printBanner();
       if (!w) {
-        printBox('No wallet found. Generate one with: moltbet wallet generate', 'warning');
+        printError('No wallet found.', { tip: 'Generate one with: moltbet wallet generate' });
         return;
       }
-      printKeyValue('Address', w.address);
-      console.log();
+      printResult({ address: w.address });
+      if (!isJsonMode) {
+        printKeyValue('Address', w.address);
+        console.log();
+      }
     });
   
   // Show private key
@@ -98,9 +103,10 @@ export function walletCommands(program: Command) {
       const w = getWallet();
       printBanner();
       if (!w) {
-        printBox('No wallet found.', 'warning');
+        printError('No wallet found.');
         return;
       }
+      printResult({ address: w.address, privateKey: w.privateKey });
       printBox([
           'Private Key Export',
           '------------------',
@@ -119,11 +125,11 @@ export function walletCommands(program: Command) {
       printBanner();
       
       if (!w) {
-        printBox('No wallet found. Generate one with: moltbet wallet generate', 'warning');
+        printError('No wallet found.', { tip: 'Generate one with: moltbet wallet generate' });
         return;
       }
       
-      const spinner = ora('Fetching balances...').start();
+      const spinner = startSpinner('Fetching balances...');
       
       try {
         const [usdc, eth] = await Promise.all([
@@ -133,19 +139,23 @@ export function walletCommands(program: Command) {
         
         spinner.stop();
         
-        printSectionHeader('Wallet Balance');
-        console.log();
-        printKeyValue('Address', chalk.dim(w.address));
-        console.log();
-        printKeyValue('USDC', chalk.greenBright(`${usdc} USDC`));
-        printKeyValue('ETH', chalk.blueBright(`${eth} ETH`));
-        console.log();
-        console.log(chalk.dim('  Chain: Skale Base Sepolia (324705682)'));
-        console.log();
+        printResult({ address: w.address, usdc, eth, chain: 'Skale Base Sepolia', chainId: 324705682 });
+
+        if (!isJsonMode) {
+          printSectionHeader('Wallet Balance');
+          console.log();
+          printKeyValue('Address', chalk.dim(w.address));
+          console.log();
+          printKeyValue('USDC', chalk.greenBright(`${usdc} USDC`));
+          printKeyValue('ETH', chalk.blueBright(`${eth} ETH`));
+          console.log();
+          console.log(chalk.dim('  Chain: Skale Base Sepolia (324705682)'));
+          console.log();
+        }
         
       } catch (err) {
         spinner.stop();
-        printBox('Failed to fetch balances', 'error');
+        printError('Failed to fetch balances', { error: (err as Error).message });
       }
     });
 }

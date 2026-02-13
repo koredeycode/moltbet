@@ -1,17 +1,13 @@
 // Discovery commands
 import chalk from 'chalk';
 import { Command } from 'commander';
-import ora from 'ora';
 import { api } from '../api';
 import { hasApiKey } from '../config';
-import { printBox, printSectionHeader } from '../ui';
+import { isJsonMode, printBox, printError, printResult, printSectionHeader, startSpinner } from '../ui';
 
 function requireAuth() {
   if (!hasApiKey()) {
-    printBox([
-        'Not authenticated.',
-        'Register with: moltbet register <name>'
-    ], 'error');
+    printError('Not authenticated.', { tip: 'Register with: moltbet register <name>' });
     process.exit(1);
   }
 }
@@ -25,32 +21,38 @@ export function discoveryCommands(program: Command) {
     .action(async (options) => {
       requireAuth();
       
-      const spinner = ora('Fetching feed...').start();
+      const spinner = startSpinner('Fetching feed...');
       const result = await api.getFeed(parseInt(options.limit, 10));
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
+        spinner.fail();
+        printError(`Failed: ${result.error}`);
         return;
       }
       
       spinner.stop();
       
       if (result.data!.bets.length === 0) {
+        printResult({ bets: [] });
         printBox('No open bets found.', 'info');
         return;
       }
-      
-      printSectionHeader('Open Bets');
-      console.log();
-      
-      for (const bet of result.data!.bets) {
-        console.log(chalk.cyan(`[${bet.id}]`), chalk.bold(bet.title));
-        console.log(`  ${bet.description}`);
-        console.log(`  ${chalk.greenBright(bet.stake + ' USDC')} ${bet.category ? chalk.dim(`#${bet.category}`) : ''}`);
+
+      if (!isJsonMode) {
+        printSectionHeader('Open Bets');
         console.log();
+        
+        for (const bet of result.data!.bets) {
+          console.log(chalk.cyan(`[${bet.id}]`), chalk.bold(bet.title));
+          console.log(`  ${bet.description}`);
+          console.log(`  ${chalk.greenBright(bet.stake + ' USDC')} ${bet.category ? chalk.dim(`#${bet.category}`) : ''}`);
+          console.log();
+        }
       }
       
-      printBox('Counter a bet with: moltbet bet counter <id>', 'info');
+      if (!isJsonMode) {
+        printBox('Counter a bet with: moltbet bet counter <id>', 'info');
+      }
     });
   
   // Search bets
@@ -60,14 +62,15 @@ export function discoveryCommands(program: Command) {
     .action(async (query: string) => {
       requireAuth();
       
-      const spinner = ora('Searching...').start();
+      const spinner = startSpinner('Searching...');
       
       // Note: Search endpoint would need to be added to API
       // For now, just show the feed
       const result = await api.getFeed(50);
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
+        spinner.fail();
+        printError(`Failed: ${result.error}`);
         return;
       }
       
@@ -80,17 +83,22 @@ export function discoveryCommands(program: Command) {
       );
       
       if (filtered.length === 0) {
+        printResult({ results: [] });
         printBox(`No bets matching "${query}"`, 'warning');
         return;
       }
+
+      printResult({ results: filtered });
       
-      printSectionHeader(`Results for "${query}"`);
-      console.log();
-      
-      for (const bet of filtered) {
-        console.log(chalk.cyan(`[${bet.id}]`), bet.title);
-        console.log(`  ${chalk.greenBright(bet.stake + ' USDC')}`);
+      if (!isJsonMode) {
+        printSectionHeader(`Results for "${query}"`);
         console.log();
+        
+        for (const bet of filtered) {
+          console.log(chalk.cyan(`[${bet.id}]`), bet.title);
+          console.log(`  ${chalk.greenBright(bet.stake + ' USDC')}`);
+          console.log();
+        }
       }
     });
   
@@ -102,33 +110,41 @@ export function discoveryCommands(program: Command) {
     .action(async (options) => {
       requireAuth();
       
-      const spinner = ora('Fetching notifications...').start();
+      const spinner = startSpinner('Fetching notifications...');
       const result = await api.getNotifications(options.unread);
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
+        spinner.fail();
+        printError(`Failed: ${result.error}`);
         return;
       }
       
       spinner.stop();
       
-      if (result.data!.notifications.length === 0) {
-        printBox('No notifications.', 'info');
-        return;
-      }
-      
-      printSectionHeader(`Notifications (${result.data!.unreadCount} unread)`);
-      console.log();
-      
-      for (const notif of result.data!.notifications) {
-        const icon = notif.read ? '  ' : '• ';
-        const color = notif.read ? chalk.dim : chalk.white;
-        
-        console.log(color(`${icon}${notif.message}`));
-        if (notif.betId) {
-          console.log(chalk.dim(`    Bet: ${notif.betId.slice(0, 8)}`));
+      printResult({ 
+          notifications: result.data!.notifications,
+          unreadCount: result.data!.unreadCount 
+      });
+
+      if (!isJsonMode) {
+        if (result.data!.notifications.length === 0) {
+          printBox('No notifications.', 'info');
+          return;
         }
+        
+        printSectionHeader(`Notifications (${result.data!.unreadCount} unread)`);
         console.log();
+        
+        for (const notif of result.data!.notifications) {
+          const icon = notif.read ? '  ' : '• ';
+          const color = notif.read ? chalk.dim : chalk.white;
+          
+          console.log(color(`${icon}${notif.message}`));
+          if (notif.betId) {
+            console.log(chalk.dim(`    Bet: ${notif.betId.slice(0, 8)}`));
+          }
+          console.log();
+        }
       }
     });
   
@@ -138,29 +154,34 @@ export function discoveryCommands(program: Command) {
     .description('View top agents by reputation')
     .option('-l, --limit <n>', 'Number to show', '20')
     .action(async (options) => {
-      const spinner = ora('Fetching leaderboard...').start();
+      const spinner = startSpinner('Fetching leaderboard...');
       const result = await api.getLeaderboard(parseInt(options.limit, 10));
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
+        spinner.fail();
+        printError(`Failed: ${result.error}`);
         return;
       }
       
       spinner.stop();
       
-      printSectionHeader('Leaderboard');
-      console.log();
-      
-      for (const agent of result.data!.agents) {
-        const medal = 
-          agent.rank === 1 ? '🥇' :
-          agent.rank === 2 ? '🥈' :
-          agent.rank === 3 ? '🥉' :
-          chalk.dim(`${agent.rank}.`);
+      printResult({ agents: result.data!.agents });
+
+      if (!isJsonMode) {
+        printSectionHeader('Leaderboard');
+        console.log();
         
-        const style = agent.rank <= 3 ? chalk.bold : (s: string) => s;
-        
-        console.log(`  ${medal} ${style(agent.name.padEnd(20))} ${chalk.greenBright(agent.reputation)} pts`);
+        for (const agent of result.data!.agents) {
+          const medal = 
+            agent.rank === 1 ? '🥇' :
+            agent.rank === 2 ? '🥈' :
+            agent.rank === 3 ? '🥉' :
+            chalk.dim(`${agent.rank}.`);
+          
+          const style = agent.rank <= 3 ? chalk.bold : (s: string) => s;
+          
+          console.log(`  ${medal} ${style(agent.name.padEnd(20))} ${chalk.greenBright(agent.reputation)} pts`);
+        }
       }
       
       console.log();
@@ -173,18 +194,23 @@ export function discoveryCommands(program: Command) {
     .action(async () => {
       requireAuth();
       
-      const spinner = ora('Checking...').start();
+      const spinner = startSpinner('Checking...');
       const result = await api.getNotifications(true);
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
+        spinner.fail();
+        printError(`Failed: ${result.error}`);
         return;
       }
       
       spinner.stop();
       
+      printResult({ unreadCount: result.data!.unreadCount });
+
       if (result.data!.unreadCount === 0) {
-        console.log(chalk.greenBright('✓ No pending actions'));
+        if (!isJsonMode) {
+            console.log(chalk.greenBright('✓ No pending actions'));
+        }
         return;
       }
       

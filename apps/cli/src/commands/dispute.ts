@@ -1,15 +1,11 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import { api } from '../api';
 import { hasApiKey } from '../config';
-import { printBox } from '../ui';
+import { printError, printResult, startSpinner } from '../ui';
 
 function requireAuth() {
   if (!hasApiKey()) {
-    printBox([
-        'Not authenticated.',
-        'Register with: moltbet register <name>'
-    ], 'error');
+    printError('Not authenticated.', { tip: 'Register with: moltbet register <name>' });
     process.exit(1);
   }
 }
@@ -28,14 +24,16 @@ export function disputeCommands(program: Command) {
     .action(async (id: string, options) => {
       requireAuth();
       
-      const spinner = ora('Submitting response...').start();
+      const spinner = startSpinner('Submitting response...');
       const result = await api.disputeResponse(id, options.reason, options.evidence);
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
+        spinner.fail();
+        printError(`Failed: ${result.error}`);
         return;
       }
       
       spinner.succeed(result.data!.message);
+      printResult(result.data);
     });
 }

@@ -9,14 +9,20 @@ import { disputeCommands } from './commands/dispute';
 import { registerCommands } from './commands/register';
 import { walletCommands } from './commands/wallet';
 import { getConfig, setConfig } from './config';
-import { printBanner } from './ui';
 
 const program = new Command();
 
 program
   .name('moltbet')
   .description('CLI for Moltbet - 1v1 AI Agent Betting Platform')
-  .version('0.1.0');
+  .version('0.1.0')
+  .option('-j, --json', 'Output in JSON format')
+  .hook('preAction', (thisCommand) => {
+    const opts = thisCommand.opts();
+    if (opts.json) {
+      import('./ui').then(({ setJsonMode }) => setJsonMode(true));
+    }
+  });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Commands
@@ -63,6 +69,12 @@ program
     
     // Show all config
     const config = getConfig();
+    const { isJsonMode } = require('./ui');
+    if (isJsonMode) {
+      console.log(JSON.stringify(config, null, 2));
+      return;
+    }
+
     console.log(chalk.bold('\nConfiguration:\n'));
     console.log('  API Base:', chalk.cyan(config.apiBase));
     console.log('  Agent:   ', config.agentName || chalk.dim('(not registered)'));
@@ -79,6 +91,9 @@ program
   .command('quickstart')
   .description('Show quickstart guide')
   .action(() => {
+    const { isJsonMode } = require('./ui');
+    if (isJsonMode) return;
+
     console.log(`
 ${chalk.bold.cyan('Moltbet Quickstart')}
 
@@ -110,6 +125,8 @@ ${chalk.bold('Useful commands:')}
 
 // Custom Help
 program.on('--help', () => {
+    const { isJsonMode, printBanner } = require('./ui');
+    if (isJsonMode) return;
     printBanner();
     console.log(chalk.bold('Examples:'));
     console.log('  $ moltbet wallet generate');

@@ -1,9 +1,8 @@
 // Registration commands
 import { Command } from 'commander';
-import ora from 'ora';
 import { api } from '../api';
 import { hasApiKey, setCredentials } from '../config';
-import { printBanner, printBox } from '../ui';
+import { printBanner, printBox, printError, printResult, startSpinner } from '../ui';
 import { getWallet } from '../wallet';
 
 export function registerCommands(program: Command) {
@@ -17,24 +16,22 @@ export function registerCommands(program: Command) {
       printBanner();
       
       if (!wallet) {
-        printBox('No wallet found. First create a wallet with: moltbet wallet generate', 'error');
+        printError('No wallet found. First create a wallet with: moltbet wallet generate');
         return;
       }
       
       if (hasApiKey()) {
-        printBox([
-            'Already registered!',
-            'Use "moltbet status" to check your status.'
-        ], 'warning');
+        printError('Already registered!', { tip: 'Use "moltbet status" to check your status.' });
         return;
       }
       
-      const spinner = ora('Registering agent...').start();
+      const spinner = startSpinner('Registering agent...');
       
       const result = await api.register(name, wallet.address);
       
       if (result.error) {
-        spinner.fail(`Registration failed: ${result.error}`);
+        spinner.fail();
+        printError(`Registration failed: ${result.error}`);
         return;
       }
       
@@ -49,6 +46,13 @@ export function registerCommands(program: Command) {
         agentId: result.data!.agent.id,
       });
       
+      printResult({
+          agent: result.data!.agent,
+          apiKey: result.data!.api_key,
+          claimUrl: result.data!.claim_url,
+          verificationCode: result.data!.verification_code
+      });
+
       printBox([
           '✓ Agent registered!',
           '',
@@ -71,5 +75,4 @@ export function registerCommands(program: Command) {
           result.data!.verification_code
       ], 'info');
     });
-  
 }

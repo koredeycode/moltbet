@@ -1,27 +1,19 @@
-// Betting commands - Updated with payment info
 import chalk from 'chalk';
 import { Command } from 'commander';
-import ora from 'ora';
 import { api, SystemConfig } from '../api';
 import { hasApiKey, hasWallet } from '../config';
-import { printBox, printKeyValue, printSectionHeader } from '../ui';
+import { isJsonMode, printBox, printError, printKeyValue, printResult, printSectionHeader, startSpinner } from '../ui';
 
 function requireAuth() {
   if (!hasApiKey()) {
-    printBox([
-        'Not authenticated.',
-        'Register with: moltbet register <name>'
-    ], 'error');
+    printError('Not authenticated.', { tip: 'Register with: moltbet register <name>' });
     process.exit(1);
   }
 }
 
 function requireWallet() {
   if (!hasWallet()) {
-    printBox([
-        'No wallet found.',
-        'Generate one with: moltbet wallet generate'
-    ], 'error');
+    printError('No wallet found.', { tip: 'Generate one with: moltbet wallet generate' });
     process.exit(1);
   }
 }
@@ -45,7 +37,7 @@ export function betCommands(program: Command) {
       requireAuth();
       requireWallet();
       
-      const spinner = ora('Initializing...').start();
+      const spinner = startSpinner('Initializing...');
       
       // Fetch system config and validate category
       let config: SystemConfig | null = null;
@@ -61,11 +53,8 @@ export function betCommands(program: Command) {
       const categories = config?.betting.categories || ['crypto', 'sports', 'politics', 'entertainment', 'tech', 'finance', 'weather', 'custom'];
       
       if (options.category && !categories.includes(options.category)) {
-          spinner.fail(`Invalid category: ${options.category}`);
-          printBox([
-              'Allowed categories:',
-              ...categories.map((c: string) => `• ${c}`)
-          ], 'error');
+          spinner.fail();
+          printError(`Invalid category: ${options.category}`, { allowed: categories });
           return;
       }
 
@@ -81,21 +70,25 @@ export function betCommands(program: Command) {
       });
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
+        spinner.fail();
+        printError(`Failed: ${result.error}`);
         return;
       }
       
       spinner.succeed('Bet proposed!');
       
-      const bet = result.data!.bet;
+      const betData = result.data!.bet;
+      printResult({ bet: betData });
       
-      printSectionHeader('Bet Proposal');
-      console.log();
-      printKeyValue('ID', bet.id);
-      printKeyValue('Title', bet.title);
-      printKeyValue('Stake', `${bet.stake} USDC`);
-      printKeyValue('Status', bet.status);
-      console.log();
+      if (!isJsonMode) {
+        printSectionHeader('Bet Proposal');
+        console.log();
+        printKeyValue('ID', betData.id);
+        printKeyValue('Title', betData.title);
+        printKeyValue('Stake', `${betData.stake} USDC`);
+        printKeyValue('Status', betData.status);
+        console.log();
+      }
     });
   
   // List my bets
@@ -105,37 +98,43 @@ export function betCommands(program: Command) {
     .action(async () => {
       requireAuth();
       
-      const spinner = ora('Fetching bets...').start();
+      const spinner = startSpinner('Fetching bets...');
       const result = await api.getMyBets();
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
+        spinner.fail();
+        printError(`Failed: ${result.error}`);
         return;
       }
       
       spinner.stop();
       
       if (result.data!.bets.length === 0) {
+        printResult({ bets: [] });
         printBox([
             'No bets yet.',
             'Propose one with: moltbet bet propose'
         ], 'info');
         return;
       }
+
+      printResult({ bets: result.data!.bets });
       
-      printSectionHeader('Your Bets');
-      console.log();
-      
-      for (const bet of result.data!.bets) {
-        const statusColor = 
-          bet.status === 'open' ? chalk.blue :
-          bet.status === 'countered' ? chalk.yellow :
-          bet.status === 'resolved' ? chalk.green :
-          chalk.gray;
-        
-        console.log(`  ${chalk.dim(bet.id)} ${bet.title}`);
-        console.log(`    ${statusColor(bet.status)} · ${bet.stake} USDC · ${bet.role}`);
+      if (!isJsonMode) {
+        printSectionHeader('Your Bets');
         console.log();
+        
+        for (const bet of result.data!.bets) {
+          const statusColor = 
+            bet.status === 'open' ? chalk.blue :
+            bet.status === 'countered' ? chalk.yellow :
+            bet.status === 'resolved' ? chalk.green :
+            chalk.gray;
+          
+          console.log(`  ${chalk.dim(bet.id)} ${bet.title}`);
+          console.log(`    ${statusColor(bet.status)} · ${bet.stake} USDC · ${bet.role}`);
+          console.log();
+        }
       }
     });
   
@@ -146,28 +145,32 @@ export function betCommands(program: Command) {
     .action(async (id: string) => {
       requireAuth();
       
-      const spinner = ora('Fetching bet...').start();
+      const spinner = startSpinner('Fetching bet...');
       const result = await api.getBet(id);
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
-        console.log(chalk.yellow('Tip: Use "moltbet bet list" to find IDs'));
+        spinner.fail();
+        printError(`Failed: ${result.error}`, { tip: 'Use "moltbet bet list" to find IDs' });
         return;
       }
       
       spinner.stop();
-      const bet = result.data!.bet;
+      const betData = result.data!.bet;
       
-      printSectionHeader('Bet Details');
-      console.log();
-      printKeyValue('ID', bet.id);
-      printKeyValue('Title', bet.title);
-      printKeyValue('Description', bet.description);
-      printKeyValue('Terms', bet.terms);
-      printKeyValue('Stake', `${bet.stake} USDC`);
-      printKeyValue('Status', bet.status);
-      printKeyValue('Expires', new Date(bet.expiresAt).toLocaleString());
-      console.log();
+      printResult({ bet: betData });
+
+      if (!isJsonMode) {
+        printSectionHeader('Bet Details');
+        console.log();
+        printKeyValue('ID', betData.id);
+        printKeyValue('Title', betData.title);
+        printKeyValue('Description', betData.description);
+        printKeyValue('Terms', betData.terms);
+        printKeyValue('Stake', `${betData.stake} USDC`);
+        printKeyValue('Status', betData.status);
+        printKeyValue('Expires', new Date(betData.expiresAt).toLocaleString());
+        console.log();
+      }
     });
   
   // Counter bet
@@ -178,15 +181,17 @@ export function betCommands(program: Command) {
       requireAuth();
       requireWallet();
       
-      const spinner = ora('Countering bet...').start();
+      const spinner = startSpinner('Countering bet...');
       const result = await api.counterBet(id);
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
+        spinner.fail();
+        printError(`Failed: ${result.error}`);
         return;
       }
       
       spinner.succeed(result.data!.message);
+      printResult(result.data);
     });
   
   // Claim win
@@ -197,15 +202,17 @@ export function betCommands(program: Command) {
     .action(async (id: string, options) => {
       requireAuth();
       
-      const spinner = ora('Claiming win...').start();
+      const spinner = startSpinner('Claiming win...');
       const result = await api.claimWin(id, options.evidence);
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
+        spinner.fail();
+        printError(`Failed: ${result.error}`);
         return;
       }
       
       spinner.succeed(result.data!.message);
+      printResult(result.data);
     });
   
   // Concede
@@ -215,16 +222,19 @@ export function betCommands(program: Command) {
     .action(async (id: string) => {
       requireAuth();
       
-      const spinner = ora('Conceding bet...').start();
+      const spinner = startSpinner('Conceding bet...');
       const result = await api.concede(id);
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
+        spinner.fail();
+        printError(`Failed: ${result.error}`);
         return;
       }
       
       spinner.succeed(result.data!.message);
-      if (result.data!.txHash) {
+      printResult(result.data);
+
+      if (!isJsonMode && result.data!.txHash) {
         printKeyValue('Payout Tx', chalk.cyan(result.data!.txHash));
       }
     });
@@ -238,16 +248,21 @@ export function betCommands(program: Command) {
     .action(async (id: string, options) => {
       requireAuth();
       
-      const spinner = ora('Filing dispute...').start();
+      const spinner = startSpinner('Filing dispute...');
       const result = await api.dispute(id, options.reason, options.evidence);
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
+        spinner.fail();
+        printError(`Failed: ${result.error}`);
         return;
       }
       
       spinner.succeed('Dispute filed!');
-      printKeyValue('Dispute ID', result.data!.disputeId);
+      printResult(result.data);
+
+      if (!isJsonMode) {
+        printKeyValue('Dispute ID', result.data!.disputeId);
+      }
     });
   
   // Cancel
@@ -257,16 +272,19 @@ export function betCommands(program: Command) {
     .action(async (id: string) => {
       requireAuth();
       
-      const spinner = ora('Cancelling bet...').start();
+      const spinner = startSpinner('Cancelling bet...');
       const result = await api.cancelBet(id);
       
       if (result.error) {
-        spinner.fail(`Failed: ${result.error}`);
+        spinner.fail();
+        printError(`Failed: ${result.error}`);
         return;
       }
       
       spinner.succeed(result.data!.message);
-      if (result.data!.txHash) {
+      printResult(result.data);
+
+      if (!isJsonMode && result.data!.txHash) {
         printKeyValue('Refund Tx', chalk.cyan(result.data!.txHash));
       }
     });
