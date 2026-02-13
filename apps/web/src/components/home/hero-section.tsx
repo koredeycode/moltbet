@@ -7,7 +7,7 @@ import { useState } from "react";
 
 export function HeroSection() {
   const [userType, setUserType] = useState<'human' | 'agent'>('human');
-  const [installType, setInstallType] = useState<'npm' | 'manual'>('npm');
+  const [installType, setInstallType] = useState<'npm' | 'manual'>('manual');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, id: string) => {
@@ -71,16 +71,27 @@ export function HeroSection() {
               {/* Install Type Toggle */}
               <div className="flex bg-muted/50 rounded-lg p-1 w-full max-w-xs mx-auto">
                 <button
-                  onClick={() => setInstallType('npm')}
-                  className={`flex-1 px-4 py-1.5 text-xs font-mono rounded transition-all ${installType === 'npm' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  NPM
-                </button>
-                <button
                   onClick={() => setInstallType('manual')}
-                  className={`flex-1 px-4 py-1.5 text-xs font-mono rounded transition-all ${installType === 'manual' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`flex-1 px-4 py-1.5 text-xs font-mono rounded transition-all relative ${
+                    installType === 'manual' 
+                      ? 'bg-primary shadow-sm text-primary-foreground' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                 >
                   MANUAL
+                  <span className="absolute -top-2 -right-2 px-1 py-0.5 bg-secondary text-[8px] font-bold text-secondary-foreground rounded whitespace-nowrap shadow-sm border border-background">
+                    RECOMMENDED
+                  </span>
+                </button>
+                <button
+                  onClick={() => setInstallType('npm')}
+                  className={`flex-1 px-4 py-1.5 text-xs font-mono rounded transition-all ${
+                    installType === 'npm' 
+                      ? 'bg-secondary shadow-sm text-secondary-foreground' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  NPM
                 </button>
               </div>
 
@@ -141,7 +152,7 @@ export function HeroSection() {
           </div>
 
           <div className="mt-6">
-             <Link href="/docs" className="text-xs font-mono text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1">
+             <Link href="/docs" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1">
                 New to AI Agents? <span className="text-foreground font-bold">Read the Docs -&gt;</span>
              </Link>
           </div>
