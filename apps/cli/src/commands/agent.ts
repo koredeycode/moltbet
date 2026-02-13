@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import { api } from '../api';
 import { deleteProfile, getConfig, getProfiles, setActiveProfile } from '../config';
-import { printBanner, printBox, printKeyValue, printSectionHeader } from '../ui';
+import { isJsonMode, printBanner, printBox, printError, printKeyValue, printResult, printSectionHeader } from '../ui';
 import { getEthBalance, getUsdcBalance, getWallet } from '../wallet';
 
 export function agentCommands(program: Command) {
@@ -19,30 +19,34 @@ export function agentCommands(program: Command) {
 
       printBanner();
       
+      printResult({ profiles, activeProfile: active });
+
       if (Object.keys(profiles).length === 0) {
-        console.log(chalk.dim('No profiles found.'));
+        if (!isJsonMode) console.log(chalk.dim('No profiles found.'));
         return;
       }
 
-      printSectionHeader('Agents:');
+      if (!isJsonMode) {
+        printSectionHeader('Agents:');
 
-      Object.entries(profiles).forEach(([name, profile]) => {
-        const isActive = name === active;
-        const prefix = isActive ? chalk.hex('#34d399')('➜ ') : '  ';
-        const nameStr = isActive ? chalk.hex('#34d399').bold(name) : chalk.white(name);
-        
-        const details = [];
-        if (profile.agentName) details.push(`Name: ${profile.agentName}`);
-        if (profile.apiKey) details.push(`Key: ${profile.apiKey.slice(0, 8)}...`);
-        
-        console.log(`${prefix}${nameStr}`);
-        if (details.length > 0) {
-           console.log(`    ${chalk.dim(details.join(' | '))}`);
-        } else {
-           console.log(`    ${chalk.dim('(empty)')}`);
-        }
-        console.log();
-      });
+        Object.entries(profiles).forEach(([name, profile]) => {
+          const isActive = name === active;
+          const prefix = isActive ? chalk.hex('#34d399')('➜ ') : '  ';
+          const nameStr = isActive ? chalk.hex('#34d399').bold(name) : chalk.white(name);
+          
+          const details = [];
+          if (profile.agentName) details.push(`Name: ${profile.agentName}`);
+          if (profile.apiKey) details.push(`Key: ${profile.apiKey.slice(0, 8)}...`);
+          
+          console.log(`${prefix}${nameStr}`);
+          if (details.length > 0) {
+             console.log(`    ${chalk.dim(details.join(' | '))}`);
+          } else {
+             console.log(`    ${chalk.dim('(empty)')}`);
+          }
+          console.log();
+        });
+      }
     });
 
   agent
@@ -50,11 +54,12 @@ export function agentCommands(program: Command) {
     .description('Create a new agent profile and switch to it')
     .action((name) => {
         if (!name) {
-            console.log(chalk.red('Please provide a profile name.'));
+            printError('Please provide a profile name.');
             return;
         }
         setActiveProfile(name);
         printBanner();
+        printResult({ activeProfile: name });
         printBox([
             `Switched to new profile: ${chalk.bold(name)}`, 
             "",
@@ -71,11 +76,12 @@ export function agentCommands(program: Command) {
     .action((name) => {
         const profiles = getProfiles();
         if (!profiles[name]) {
-            printBox([`Profile '${name}' does not exist.`, `Use 'moltbet agent new ${name}' to create it.`], 'error');
+            printError(`Profile '${name}' does not exist.`, { tip: `Use 'moltbet agent new ${name}' to create it.` });
             return;
         }
         setActiveProfile(name);
         printBanner();
+        printResult({ activeProfile: name });
         printBox(`Switched to profile: ${chalk.bold(name)}`, 'success');
     });
 
@@ -86,13 +92,15 @@ export function agentCommands(program: Command) {
     .action((name) => {
         const profiles = getProfiles();
         if (!profiles[name]) {
-             printBox(`Profile '${name}' does not exist.`, 'error');
+             printError(`Profile '${name}' does not exist.`);
             return;
         }
         
         deleteProfile(name);
         
         const config = getConfig();
+        printResult({ removed: name, activeProfile: config.activeProfile });
+        
         if (config.activeProfile === 'default' && name !== 'default') {
              printBox([`Removed profile: ${name}`, "Switched to default profile."], 'success');
         } else {
@@ -110,23 +118,31 @@ export function agentCommands(program: Command) {
         const w = getWallet();
 
         printBanner();
-        printSectionHeader('Whoami (Local)');
-        console.log(); // spacer
+        printResult({ 
+            activeProfile: active, 
+            agentName: config.agentName, 
+            walletAddress: w?.address 
+        });
 
-        console.log(`  Profile  ${active === 'default' ? chalk.dim(' (default)') : chalk.cyan(active)}`);
-        
-        if (config.agentName) {
-             printKeyValue('Agent', chalk.greenBright(config.agentName));
-        } else {
-             printKeyValue('Agent', chalk.yellow('(not locally configured)'));
-        }
+        if (!isJsonMode) {
+          printSectionHeader('Whoami (Local)');
+          console.log(); // spacer
 
-        if (w) {
-            printKeyValue('Wallet', chalk.dim(w.address));
-        } else {
-            printKeyValue('Wallet', chalk.red('(no wallet found)'));
+          console.log(`  Profile  ${active === 'default' ? chalk.dim(' (default)') : chalk.cyan(active)}`);
+          
+          if (config.agentName) {
+               printKeyValue('Agent', chalk.greenBright(config.agentName));
+          } else {
+               printKeyValue('Agent', chalk.yellow('(not locally configured)'));
+          }
+
+          if (w) {
+              printKeyValue('Wallet', chalk.dim(w.address));
+          } else {
+              printKeyValue('Wallet', chalk.red('(no wallet found)'));
+          }
+          console.log();
         }
-        console.log();
     });
 
   // Status - Verification status from API
@@ -139,36 +155,37 @@ export function agentCommands(program: Command) {
         printBanner();
 
         if (!config.apiKey) {
-            printBox('No API key found. Please register or login first.', 'error');
+            printError('No API key found. Please register or login first.');
             return;
         }
 
         try {
             const res = await api.getMe();
             if (res.data) {
-                const agent = res.data;
-                
-                if (agent.status === 'verified') {
+                const agentData = res.data;
+                printResult({ agent: agentData });
+
+                if (agentData.status === 'verified') {
                     printBox([
                         'Status: VERIFIED',
-                        `Agent ID: ${agent.id}`,
-                        `Score: ${agent.reputation}`
+                        `Agent ID: ${agentData.id}`,
+                        `Score: ${agentData.reputation}`
                     ], 'success');
-                } else if (agent.status === 'pending_claim') {
+                } else if (agentData.status === 'pending_claim') {
                     printBox([
                         'Status: PENDING VALIDATION',
                         'Your agent is registered but not yet verified.',
                         'Waiting for admin approval or claim process completion.'
                     ], 'warning');
                 } else {
-                    printBox(`Status: ${agent.status.toUpperCase()}`, 'info');
+                    printBox(`Status: ${agentData.status.toUpperCase()}`, 'info');
                 }
 
             } else {
-                 printBox('Failed to fetch agent status.', 'error');
+                 printError('Failed to fetch agent status. Server returned no data.');
             }
         } catch (e: any) {
-             printBox(`Error fetching status: ${e.message || 'Unknown error'}`, 'error');
+             printError(`Error fetching status: ${e.message || 'Unknown error'}`);
         }
         console.log();
     });
@@ -184,12 +201,11 @@ export function agentCommands(program: Command) {
         printBanner();
 
         if (!config.apiKey) {
-           printBox('No API key found. Please register or login first.', 'error');
+           printError('No API key found. Please register or login first.');
             return;
         }
 
         try {
-            // printBox('Fetching profile...', 'info');
             const [res, usdcBalance, ethBalance] = await Promise.all([
                 api.getMe(),
                 w ? getUsdcBalance(w.address).catch(() => 'Error') : Promise.resolve('N/A'),
@@ -197,31 +213,38 @@ export function agentCommands(program: Command) {
             ]);
             
             if (res.data) {
-                const agent = res.data;
-                printSectionHeader('Agent Profile');
-                console.log();
+                const agentData = res.data;
+                printResult({ 
+                    agent: agentData, 
+                    balances: { usdc: usdcBalance, eth: ethBalance } 
+                });
 
-                printKeyValue('ID', agent.id);
-                printKeyValue('Name', chalk.hex('#34d399').bold(agent.name));
-                printKeyValue('Status', agent.status === 'verified' ? chalk.greenBright('VERIFIED') : chalk.yellow(agent.status.toUpperCase()));
-                printKeyValue('Reputation', chalk.magenta(agent.reputation.toString()));
-                console.log();
-                
-                printSectionHeader('Wallet & Balances');
-                console.log();
-                printKeyValue('Address', chalk.dim(agent.address));
-                printKeyValue('USDC', chalk.greenBright(usdcBalance));
-                printKeyValue('ETH', chalk.blueBright(ethBalance));
-                
-                console.log();
-                console.log(chalk.dim(`Created: ${new Date(agent.createdAt).toLocaleString()}`));
+                if (!isJsonMode) {
+                  printSectionHeader('Agent Profile');
+                  console.log();
+
+                  printKeyValue('ID', agentData.id);
+                  printKeyValue('Name', chalk.hex('#34d399').bold(agentData.name));
+                  printKeyValue('Status', agentData.status === 'verified' ? chalk.greenBright('VERIFIED') : chalk.yellow(agentData.status.toUpperCase()));
+                  printKeyValue('Reputation', chalk.magenta(agentData.reputation.toString()));
+                  console.log();
+                  
+                  printSectionHeader('Wallet & Balances');
+                  console.log();
+                  printKeyValue('Address', chalk.dim(agentData.address));
+                  printKeyValue('USDC', chalk.greenBright(usdcBalance));
+                  printKeyValue('ETH', chalk.blueBright(ethBalance));
+                  
+                  console.log();
+                  console.log(chalk.dim(`Created: ${new Date(agentData.createdAt).toLocaleString()}`));
+                }
 
             } else {
-                 printBox('Failed to fetch profile data.', 'error');
+                 printError('Failed to fetch profile data. Server returned no data.');
             }
         } catch (e: any) {
-             printBox(`Error fetching profile: ${e.message || 'Unknown error'}`, 'error');
+             printError(`Error fetching profile: ${e.message || 'Unknown error'}`);
         }
-        console.log();
+        if (!isJsonMode) console.log();
     });
 }

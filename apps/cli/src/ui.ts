@@ -10,6 +10,12 @@ const THEME = {
     success: chalk.greenBright,
 };
 
+let isJsonMode = false;
+
+export function setJsonMode(enabled: boolean) {
+    isJsonMode = enabled;
+}
+
 const TAGLINES = [
     "Fortune favors the bold... and the automated.",
     "Don't trust, verify. Then bet on it.",
@@ -30,6 +36,7 @@ const TAGLINES = [
 ];
 
 export function printBanner(version: string = '0.1.0', commit?: string) {
+    if (isJsonMode) return;
     const tagline = TAGLINES[Math.floor(Math.random() * TAGLINES.length)];
     const commitStr = commit ? `(${commit})` : '';
     
@@ -39,15 +46,24 @@ export function printBanner(version: string = '0.1.0', commit?: string) {
 }
 
 export function printSectionHeader(title: string) {
+    if (isJsonMode) return;
     console.log(THEME.secondary.bold(title));
     console.log(THEME.dim('─'.repeat(40)));
 }
 
 export function printKeyValue(key: string, value: string, padLength: number = 10) {
+    if (isJsonMode) return;
     console.log(`  ${key.padEnd(padLength)} ${value}`);
 }
 
 export function printBox(content: string | string[], type: 'info' | 'warning' | 'error' | 'success' = 'info') {
+    if (isJsonMode) {
+        if (type === 'error' || type === 'warning') {
+            const message = Array.isArray(content) ? content.join(' ') : content;
+            console.error(JSON.stringify({ status: 'error', message }));
+        }
+        return;
+    }
     const lines = Array.isArray(content) ? content : [content];
     let borderColor = THEME.dim;
     let icon = 'ℹ';
@@ -71,8 +87,61 @@ export function printBox(content: string | string[], type: 'info' | 'warning' | 
 }
 
 export function printTable(headers: string[], rows: string[][]) {
+    if (isJsonMode) return;
     // Simple table implementation can be added if needed, 
     // for now we stick to standardized list views
 }
 
-export { THEME };
+/**
+ * Standardized output for AI agents and CLI users
+ * @param data The data object to print
+ */
+export function printResult(data: any) {
+    if (isJsonMode) {
+        console.log(JSON.stringify({ status: 'success', data }, null, 2));
+    }
+}
+
+/**
+ * Print an info message box
+ * @param message Info message
+ */
+export function printInfo(message: string | string[]) {
+    if (isJsonMode) return;
+    printBox(message, 'info');
+}
+
+/**
+ * Standardized error for AI agents and CLI users
+ * @param message Error message
+ * @param details Optional additional details
+ */
+export function printError(message: string, details?: any) {
+    if (isJsonMode) {
+        console.error(JSON.stringify({ status: 'error', message, details }, null, 2));
+    } else {
+        printBox(message, 'error');
+        if (details) {
+            console.log(chalk.dim(JSON.stringify(details, null, 2)));
+        }
+    }
+}
+
+/**
+ * Start a spinner (silent in JSON mode)
+ */
+import ora from 'ora';
+export function startSpinner(text: string) {
+    if (isJsonMode) {
+        return {
+            stop: () => {},
+            succeed: () => {},
+            fail: () => {},
+            text: '',
+        };
+    }
+    return ora(text).start();
+}
+
+export { isJsonMode, THEME };
+

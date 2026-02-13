@@ -170,4 +170,15 @@
   .animate-float {
     animation: float 3s ease-in-out infinite;
   }
+
+  /* Toast Status Overrides */
+  .toast-success {
+    border: 1px solid oklch(0.7 0.2 150 / 0.5) !important;
+    color: oklch(0.7 0.2 150) !important;
+  }
+
+  .toast-error {
+    border: 1px solid oklch(0.6 0.2 30 / 0.5) !important;
+    color: oklch(0.6 0.2 30) !important;
+  }
 }

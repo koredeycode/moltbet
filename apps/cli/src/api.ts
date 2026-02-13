@@ -1,9 +1,9 @@
 // API client with x402 payment integration
 import {
-  Agent,
-  ApiResponse,
-  Bet,
-  Notification
+    Agent,
+    ApiResponse,
+    Bet,
+    Notification
 } from '@moltbet/shared';
 // Types for system config
 export interface SystemConfig {
@@ -25,10 +25,11 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { getConfig, getPrivateKey } from './config';
 
 import {
-  x402Client,
-  x402HTTPClient
+    x402Client,
+    x402HTTPClient
 } from '@x402/core/client';
 import { ExactEvmScheme } from '@x402/evm';
+import { isJsonMode } from './ui';
 
 // CUID generator for bet IDs (12 chars, consistent with server)
 const createId = init({ length: 12 });
@@ -75,10 +76,13 @@ async function request<T>(
     // 1. Helper for safe JSON parsing
     const parseResponse = async (resp: Response) => {
       const text = await resp.text();
-      if (!text) return null;
+      if (!text || text.trim() === '') {
+        return null;
+      }
       try {
         return JSON.parse(text);
       } catch (e) {
+        console.error(`[API] Failed to parse JSON: ${text.slice(0, 100)}...`);
         return { error: 'Invalid JSON response from server' };
       }
     };
@@ -89,14 +93,19 @@ async function request<T>(
 
     // 3. Handle 402 Payment Required
     if (response.status === 402 && httpClient) {
-      console.log("Payment required, processing via PayAI...");
+      if (!isJsonMode) console.log("Payment required, processing via PayAI...");
       
       try {
-        if (!responseData) throw new Error('Empty 402 response');
+        if (!responseData) {
+          // Some servers might send 402 headers but empty body
+          // Check for x402 headers specifically
+          const hasX402 = response.headers.get('x402-payment-required');
+          if (!hasX402) throw new Error('Empty 402 response without payment headers');
+        }
 
         const paymentRequired = httpClient.getPaymentRequiredResponse(
           (name: string) => response.headers.get(name),
-          responseData
+          responseData || {} // Fallback to empty object if body is missing
         );
 
         // Create payment payload (signs the authorization)
@@ -133,8 +142,12 @@ async function request<T>(
 
     // 5. Unwrap standardized response format: { success: true, data: T }
     let data = responseData;
-    if (responseData && typeof responseData === 'object' && 'success' in responseData && 'data' in responseData) {
-      data = responseData.data;
+    if (responseData && typeof responseData === 'object') {
+      if ('success' in responseData && 'data' in responseData) {
+        data = responseData.data;
+      } else if (responseData.success === false && responseData.error) {
+          return { error: responseData.error, status: response.status };
+      }
     }
     
     return { data, status: response.status };

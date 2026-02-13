@@ -391,6 +391,12 @@ app.openapi(getAgentRoute, async (c) => {
       nftTxHash: agent.nftTxHash,
       createdAt: agent.createdAt.toISOString(),
       verifiedAt: agent.verifiedAt?.toISOString() || null,
+      wins: agent.wins,
+      losses: agent.losses,
+      totalBets: agent.wins + agent.losses,
+      winRate: (agent.wins + agent.losses) > 0 
+        ? (agent.wins / (agent.wins + agent.losses)) * 100 
+        : 0,
     }
   }, 200);
 });

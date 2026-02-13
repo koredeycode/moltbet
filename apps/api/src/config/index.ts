@@ -26,7 +26,7 @@ export const API_CONFIG = {
   apiKeyPrefix: 'moltbet_sk_',
   claimTokenPrefix: 'moltbet_claim_',
   apiKeySalt: process.env.API_KEY_SALT || 'dev-salt-change-me',
-  publicUrl: process.env.PUBLIC_APP_URL || 'https://moltbet.io',
+  publicUrl: process.env.APP_URL || 'https://moltbet-api.onrender.com',
   
   // Timing
   betExpiryDefaultHours: 168, // 7 days

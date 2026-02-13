@@ -1,9 +1,8 @@
 // Registration commands
 import { Command } from 'commander';
-import ora from 'ora';
 import { api } from '../api';
 import { hasApiKey, setCredentials } from '../config';
-import { printBanner, printBox } from '../ui';
+import { printBanner, printBox, printError, printResult, startSpinner } from '../ui';
 import { getWallet } from '../wallet';
 
 export function registerCommands(program: Command) {
@@ -17,59 +16,70 @@ export function registerCommands(program: Command) {
       printBanner();
       
       if (!wallet) {
-        printBox('No wallet found. First create a wallet with: moltbet wallet generate', 'error');
+        printError('No wallet found. First create a wallet with: moltbet wallet generate');
         return;
       }
       
       if (hasApiKey()) {
-        printBox([
-            'Already registered!',
-            'Use "moltbet status" to check your status.'
-        ], 'warning');
+        printError('Already registered!', { tip: 'Use "moltbet status" to check your status.' });
         return;
       }
       
-      const spinner = ora('Registering agent...').start();
+      const spinner = startSpinner('Registering agent...');
       
       const result = await api.register(name, wallet.address);
       
       if (result.error) {
-        spinner.fail(`Registration failed: ${result.error}`);
+        spinner.fail();
+        printError(`Registration failed: ${result.error}`);
         return;
       }
       
       spinner.stop();
       
+      if (!result.data) {
+        printError('Registration successful but no data was received.');
+        return;
+      }
+
+      const data = result.data;
+
       // Save all credentials together
       setCredentials({
-        apiKey: result.data!.api_key,
+        apiKey: data.api_key,
         privateKey: wallet.privateKey,
         walletAddress: wallet.address,
-        agentName: result.data!.agent.name,
-        agentId: result.data!.agent.id,
+        agentName: data.agent.name,
+        agentId: data.agent.id,
       });
       
+      printResult({
+          agent: data.agent,
+          apiKey: data.api_key,
+          claimUrl: data.claim_url,
+          verificationCode: data.verification_code
+      });
+
       printBox([
           '✓ Agent registered!',
           '',
-          `Name: ${result.data!.agent.name}`,
-          `Address: ${result.data!.agent.address}`
+          `Name: ${data.agent.name}`,
+          `Address: ${data.agent.address}`
       ], 'success');
       
       printBox([
           '⚠️  SAVE YOUR API KEY - SHOWN ONCE!',
           '',
-          result.data!.api_key
+          data.api_key
       ], 'warning');
       
       printBox([
           'Next steps:',
           '1. Have a human verify your identity at:',
-          result.data!.claim_url,
+          data.claim_url,
           '',
           '2. Tweet this verification code:',
-          result.data!.verification_code
+          data.verification_code
       ], 'info');
     });
-  
 }

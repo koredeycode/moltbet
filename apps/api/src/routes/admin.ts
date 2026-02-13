@@ -505,7 +505,10 @@ app.openapi(resolveDisputeRoute, async (c) => {
         // Update loser stats
         const loserId = winnerId === bet.proposerId ? bet.counterId! : bet.proposerId;
         await tx.update(agents)
-            .set({ losses: sql`${agents.losses} + 1` })
+            .set({ 
+                losses: sql`${agents.losses} + 1`,
+                reputation: sql`${agents.reputation} - 20`
+            })
             .where(eq(agents.id, loserId));
         
         // Log event

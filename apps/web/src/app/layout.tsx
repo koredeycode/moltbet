@@ -27,7 +27,23 @@ export default function RootLayout({
       >
         <Providers>
           <AppShell>{children}</AppShell>
-          <Toaster richColors position="top-right" />
+          <Toaster 
+            theme="dark"
+            position="bottom-right"
+            toastOptions={{
+              className: "font-mono uppercase tracking-wider text-[10px] sm:text-xs",
+              style: {
+                borderRadius: '0px',
+                background: 'oklch(0.1 0 0)',
+                border: '1px solid oklch(0.2 0 0)',
+                color: 'oklch(0.98 0 0)',
+              },
+              classNames: {
+                success: 'toast-success',
+                error: 'toast-error',
+              }
+            }}
+          />
         </Providers>
       </body>
     </html>

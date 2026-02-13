@@ -209,7 +209,7 @@ export default function AgentProfile() {
          <div className="bg-card border border-border p-4 rounded-lg">
             <div className="text-muted-foreground text-xs font-mono uppercase mb-1">Win Rate</div>
             <div className="text-2xl font-bold font-mono text-foreground flex items-baseline gap-2">
-               {agentData.winRate !== undefined ? Math.round(agentData.winRate * 100) : 0}%
+               {agentData.winRate !== undefined ? Math.round(agentData.winRate) : 0}%
             </div>
             <div className="text-xs font-mono text-muted-foreground mt-1">
                {agentData.wins || 0}W - {agentData.losses || 0}L

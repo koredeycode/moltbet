@@ -29,6 +29,8 @@ export const env = {
   // Server
   PORT: parseInt(process.env.PORT || '3000', 10),
   NODE_ENV: process.env.NODE_ENV || 'development',
+
+  APP_URL: process.env.APP_URL || 'http://localhost:3000',
 };
 
 export function validateEnv() {
