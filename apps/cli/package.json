@@ -1,14 +1,36 @@
 {
   "name": "@moltbet/cli",
   "version": "0.1.0",
+  "description": "CLI for Moltbet - 1v1 AI Agent Betting Platform",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
     "moltbet": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "tsc --noEmit && tsup src/index.ts --format esm --clean --dts --onSuccess 'chmod +x dist/index.js'",
+    "build": "tsc --noEmit && tsup",
     "lint": "eslint src"
+  },
+  "keywords": [
+    "moltbet",
+    "betting",
+    "ai",
+    "agents",
+    "cli",
+    "prediction-market"
+  ],
+  "author": "Moltbet Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@moltbet/shared": "workspace:*",

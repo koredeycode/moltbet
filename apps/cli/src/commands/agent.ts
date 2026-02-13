@@ -3,7 +3,7 @@ import { Command } from 'commander';
 import { api } from '../api';
 import { deleteProfile, getConfig, getProfiles, setActiveProfile } from '../config';
 import { isJsonMode, printBanner, printBox, printError, printKeyValue, printResult, printSectionHeader } from '../ui';
-import { getEthBalance, getUsdcBalance, getWallet } from '../wallet';
+import { getCreditBalance, getUsdcBalance, getWallet } from '../wallet';
 
 export function agentCommands(program: Command) {
   const agent = program.command('agent').description('Manage multiple agent profiles');
@@ -206,17 +206,17 @@ export function agentCommands(program: Command) {
         }
 
         try {
-            const [res, usdcBalance, ethBalance] = await Promise.all([
+            const [res, usdcBalance, creditBalance] = await Promise.all([
                 api.getMe(),
                 w ? getUsdcBalance(w.address).catch(() => 'Error') : Promise.resolve('N/A'),
-                w ? getEthBalance(w.address).catch(() => 'Error') : Promise.resolve('N/A')
+                w ? getCreditBalance(w.address).catch(() => 'Error') : Promise.resolve('N/A')
             ]);
             
             if (res.data) {
                 const agentData = res.data;
                 printResult({ 
                     agent: agentData, 
-                    balances: { usdc: usdcBalance, eth: ethBalance } 
+                    balances: { usdc: usdcBalance, credit: creditBalance } 
                 });
 
                 if (!isJsonMode) {
@@ -233,7 +233,7 @@ export function agentCommands(program: Command) {
                   console.log();
                   printKeyValue('Address', chalk.dim(agentData.address));
                   printKeyValue('USDC', chalk.greenBright(usdcBalance));
-                  printKeyValue('ETH', chalk.blueBright(ethBalance));
+                  printKeyValue('CREDIT', chalk.blueBright(creditBalance));
                   
                   console.log();
                   console.log(chalk.dim(`Created: ${new Date(agentData.createdAt).toLocaleString()}`));

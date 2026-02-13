@@ -29,98 +29,128 @@ const randomElement = <T>(arr: T[]): T => arr[randomInt(0, arr.length - 1)];
 const ADJECTIVES = ['Cyber', 'Nano', 'Mecha', 'Quantum', 'Neural', 'Hyper', 'Void', 'Solar', 'Lunar', 'Astro', 'Techno', 'Giga', 'Omni', 'Flux', 'Data', 'Net', 'Grid', 'Synth', 'Robo', 'Bio'];
 const NOUNS = ['Mind', 'Core', 'Link', 'Node', 'Pulse', 'Shard', 'Byte', 'Bit', 'Warp', 'Flow', 'Nexus', 'Sphere', 'Titan', 'Ghost', 'Shell', 'Glitch', 'Spark', 'Vector', 'Logic', 'Code'];
 
-const generateAgentName = () => `${randomElement(ADJECTIVES)}${randomElement(NOUNS)}${randomInt(1, 999)}`;
+const generateAgentName = () => `Test${randomElement(ADJECTIVES)}${randomElement(NOUNS)}${randomInt(1, 999)}`;
 
 const BET_TEMPLATES = [
   {
-    title: "Bitcoin Flows to 100k",
+    title: "[TEST] Bitcoin WILL reach $150,000 by March 2026",
     category: "crypto",
-    description: "Will Bitcoin (BTC) price consistently trade above $100,000 USD for at least 24 hours on major exchanges?",
-    terms: "The bet resolves to YES if the daily close price of BTC/USD on Coinbase and Binance is >= $100,000 for any day before Dec 31, 2026. Data from CoinGecko."
+    description: "[TEST] This bet predicts that the market price of Bitcoin (BTC) will hit or exceed $150,000 USD on major global exchanges before the end of March 2026. The price must be sustained on a daily candle close to be considered valid.",
+    terms: "[TEST] Winning Condition (Proposer): Bitcoin hits $150,000+ on Coinbase/Binance daily close before April 1, 2026. Winning Condition (Counter): Bitcoin fails to hit $150,000 on any daily close before the deadline."
   },
   {
-    title: "GTA VI Release in 2025",
+    title: "[TEST] GTA VI WILL be released by December 2025",
     category: "entertainment",
-    description: "Will Rockstar Games release Grand Theft Auto VI to the general public before January 1st, 2026?",
-    terms: "Resolves YES if the game is available for purchase and playable on PS5 or Xbox Series X/S by the deadline. Early access or beta does not count."
+    description: "[TEST] This bet tracks the official release date of Grand Theft Auto VI. It predicts that Rockstar Games will make the game available for general purchase and play on consoles by the end of 2025.",
+    terms: "[TEST] Winning Condition (Proposer): Official retail launch occurs on or before Dec 31, 2025. Winning Condition (Counter): No retail launch occurs by the deadline, including delays or 'Coming Soon' announcements."
   },
   {
-    title: "Nvidia Flips Apple",
+    title: "[TEST] Nvidia WILL surpass Apple in Market Cap by June 2026",
     category: "finance",
-    description: "Will Nvidia's market capitalization exceed Apple's market capitalization at market close?",
-    terms: "Resolves YES if Nvidia's market cap is higher than Apple's at the NYSE market close on any trading day before June 2026."
+    description: "[TEST] This bet focuses on the stock market performance of Nvidia vs Apple. It predicts that Nvidia's total market capitalization will exceed Apple's at the close of any trading day within the timeframe.",
+    terms: "[TEST] Winning Condition (Proposer): Nvidia Market Cap > Apple Market Cap at NYSE/NASDAQ close before July 1, 2026. Winning Condition (Counter): Apple maintains a higher market cap at every market close until the deadline."
   },
   {
-    title: "Super Bowl LX Winner",
+    title: "[TEST] Kansas City Chiefs WILL win Super Bowl LX in 2026",
     category: "sports",
-    description: "Will the Kansas City Chiefs win Super Bowl LX in 2026?",
-    terms: "Resolves YES if the Chiefs are declared the official winners of the Super Bowl played in February 2026."
+    description: "[TEST] This bet predicts that the Kansas City Chiefs will secure a victory in Super Bowl LX, scheduled for February 2026, becoming the champions for that season.",
+    terms: "[TEST] Winning Condition (Proposer): Chiefs win the Super Bowl LX final. Winning Condition (Counter): Any other team wins the Super Bowl LX final, or the game is cancelled/not completed."
   },
   {
-    title: "GPT-5 Achieves AGI",
+    title: "[TEST] OpenAI WILL release GPT-5 with AGI capabilities by late 2026",
     category: "tech",
-    description: "Will OpenAI's GPT-5 be widely recognized as achieving Artificial General Intelligence (AGI)?",
-    terms: "Resolves YES if at least 3 major independent AI research labs publish papers confirming AGI-level capabilities in reasoning and generalization."
+    description: "[TEST] This bet predicts that OpenAI will launch GPT-5 and it will be widely recognized by the scientific community as achieving Artificial General Intelligence (AGI) milestones in reasoning and autonomy.",
+    terms: "[TEST] Winning Condition (Proposer): GPT-5 is released and 3+ independent labs confirm AGI-level logic/reasoning. Winning Condition (Counter): GPT-5 is not released, or fails to meet independent AGI benchmarks by year-end 2026."
   },
   {
-    title: "US Stablecoin Regulation",
+    title: "[TEST] US Congress WILL pass Stablecoin Regulation in 2026",
     category: "politics",
-    description: "Will the US Congress pass comprehensive stablecoin legislation signed into law?",
-    terms: "Resolves YES if a bill specifically regulating stablecoin issuers is signed by the President before the end of 2026."
+    description: "[TEST] This bet predicts the passage of a comprehensive federal law in the United States specifically designed to regulate stablecoin issuers and their reserves.",
+    terms: "[TEST] Winning Condition (Proposer): A bill regulating stablecoins is signed into law by the President before 2027. Winning Condition (Counter): No such bill is signed into law, including vetoed bills or pending legislation."
   },
   {
-    title: "SpaceX Starship Mars Landing",
+    title: "[TEST] SpaceX WILL land an uncrewed Starship on Mars by 2027",
     category: "tech",
-    description: "Will SpaceX successfully land an uncrewed Starship on the surface of Mars?",
-    terms: "Resolves YES if SpaceX confirms a soft landing of Starship on Mars. Crashes or communication failures upon landing resolve NO."
+    description: "[TEST] This bet predicts a successful soft landing of an uncrewed SpaceX Starship on the Martian surface, representing a major milestone in interplanetary travel.",
+    terms: "[TEST] Winning Condition (Proposer): SpaceX confirms a successful soft landing on Mars. Winning Condition (Counter): The mission fails, the craft crashes, or no landing attempt is made by Jan 1, 2027."
   },
   {
-    title: "Ethereum ETF Inflows > 10B",
+    title: "[TEST] Ethereum ETF Inflows WILL exceed $20B in its first year",
     category: "crypto",
-    description: "Will spot Ethereum ETFs see net inflows exceeding $10 Billion USD within the first year?",
-    terms: "Resolves YES if total net inflows across all US spot ETH ETFs exceed $10B by July 2026, based on Bloomberg data."
+    description: "[TEST] This bet predicts that the cumulative net inflows into all approved US Spot Ethereum ETFs will surpass $20 Billion USD within the first 12 months of trading.",
+    terms: "[TEST] Winning Condition (Proposer): Total net inflows > $20B according to Bloomberg/Farside data within 365 days of launch. Winning Condition (Counter): Total net inflows remain at or below $20B within the first year."
   },
   {
-    title: "Apple Foldable iPhone",
+    title: "[TEST] Apple WILL launch a Foldable iPhone by September 2026",
     category: "tech",
-    description: "Will Apple announce and ship a foldable iPhone model?",
-    terms: "Resolves YES if a foldable iPhone is available for retail purchase. Prototypes or patents do not count."
+    description: "[TEST] This bet predicts that Apple will officially announce and begin shipping a commercially available iPhone model with a foldable display technology.",
+    terms: "[TEST] Winning Condition (Proposer): A foldable iPhone is available for retail purchase by Oct 1, 2026. Winning Condition (Counter): No foldable iPhone is released to the public by the deadline."
   },
   {
-    title: "Fed Rates Below 3%",
+    title: "[TEST] The Fed WILL cut interest rates below 2.5% by 2027",
     category: "finance",
-    description: "Will the US Federal Reserve cut the Fed Funds Rate to below 3.00%?",
-    terms: "Resolves YES if the target range upper bound is set below 3.00% at any FOMC meeting before 2027."
+    description: "[TEST] This bet predicts that the US Federal Reserve will lower the target federal funds rate to a level below 2.5% in response to economic conditions.",
+    terms: "[TEST] Winning Condition (Proposer): The upper bound of the Fed Funds Rate is set below 2.5% at any FOMC meeting before 2027. Winning Condition (Counter): The rate remains at or above 2.5% throughout the period."
   },
   {
-    title: "World Cup 2026 Winner",
-    category: "sports",
-    description: "Will France win the 2026 FIFA World Cup?",
-    terms: "Resolves YES if the French national team wins the final match. Resolves NO for any other winner."
+    title: "[TEST] The Fed WILL NOT raise interest rates in 2026",
+    category: "finance",
+    description: "[TEST] This bet predicts that the US Federal Reserve will maintain or lower interest rates throughout the 2026 calendar year, without any upward adjustments.",
+    terms: "[TEST] Winning Condition (Proposer): The Fed Funds Rate target range is never increased in 2026. Winning Condition (Counter): The Fed increases the rate target range at least once in 2026."
   },
   {
-    title: "TikTok US Ban Enforced",
-    category: "politics",
-    description: "Will the ban on TikTok in the United States be fully enforced and the app removed from stores?",
-    terms: "Resolves YES if TikTok is unavailable for download on the US App Store and Google Play Store for 7 consecutive days."
-  },
-  {
-    title: "Solana outages < 24h",
-    category: "crypto",
-    description: "Will the Solana mainnet experience less than 24 hours of total downtime in 2026?",
-    terms: "Resolves YES if the official status page records < 24 hours of 'Major Outage' for the calendar year."
-  },
-  {
-    title: "Best Picture: Dune Part 3",
-    category: "entertainment",
-    description: "Will 'Dune: Messiah' (Part 3) win Best Picture at the Academy Awards?",
-    terms: "Resolves YES if the film wins the Best Picture Oscar. Note: Depends on release date eligibility."
-  },
-  {
-    title: "Nuclear Fusion Net Gain",
+    title: "[TEST] BlueSky WILL NOT reach 50M users by July 2026",
     category: "tech",
-    description: "Will a commercial fusion reactor achieve consistent net energy gain (Q > 1)?",
-    terms: "Resolves YES if a private company demonstrates Q > 1 to an independent auditing board."
+    description: "[TEST] This bet predicts that the social media platform BlueSky will fail to reach the 50 million registered user milestone by the middle of 2026.",
+    terms: "[TEST] Winning Condition (Proposer): BlueSky's public user count remains below 50 million on July 1, 2026. Winning Condition (Counter): BlueSky officially reaches or exceeds 50 million registered users before the deadline."
+  },
+  {
+    title: "[TEST] X (formerly Twitter) WILL NOT be profitable in 2025",
+    category: "tech",
+    description: "[TEST] This bet predicts that X will continue to report net losses or fail to achieve GAAP profitability for the 2025 fiscal year.",
+    terms: "[TEST] Winning Condition (Proposer): X fails to report a net profit for the 2025 fiscal year. Winning Condition (Counter): X reports a positive net profit in its official annual financial summary for 2025."
+  },
+  {
+    title: "[TEST] Dogecoin WILL reach $1.00 by December 2026",
+    category: "crypto",
+    description: "[TEST] This bet predicts that the market price of Dogecoin (DOGE) will reach or exceed $1.00 USD at least once before the end of 2026.",
+    terms: "[TEST] Winning Condition (Proposer): DOGE price hits $1.00 on any major exchange daily close before 2027. Winning Condition (Counter): DOGE price never hits $1.00 on any daily close before 2027."
+  },
+  {
+    title: "[TEST] Real Madrid WILL win the Champions League in 2026",
+    category: "sports",
+    description: "[TEST] This bet predicts that Real Madrid CF will be the winners of the UEFA Champions League for the 2025/2026 season.",
+    terms: "[TEST] Winning Condition (Proposer): Real Madrid wins the 2026 UCL final. Winning Condition (Counter): Any other team wins the 2026 UCL final."
+  },
+  {
+    title: "[TEST] Anthropic WILL release Claude 4 by June 2026",
+    category: "tech",
+    description: "[TEST] This bet predicts that Anthropic will officially release its next-generation AI model, Claude 4, to the public by mid-2026.",
+    terms: "[TEST] Winning Condition (Proposer): Claude 4 is publicly accessible by June 30, 2026. Winning Condition (Counter): Claude 4 is not released to the public by the deadline."
+  },
+  {
+    title: "[TEST] Manchester City WILL win the Premier League in 2026",
+    category: "sports",
+    description: "[TEST] This bet predicts that Manchester City will finish first in the English Premier League for the 2025/2026 season.",
+    terms: "[TEST] Winning Condition (Proposer): Manchester City is crowned 2025/2026 PL champions. Winning Condition (Counter): Any other team wins the 2025/2026 PL title."
+  },
+  {
+    title: "[TEST] The S&P 500 WILL NOT drop below 4000 points in 2026",
+    category: "finance",
+    description: "[TEST] This bet predicts that the S&P 500 index will remain above the 4000-point level throughout the entire calendar year of 2026.",
+    terms: "[TEST] Winning Condition (Proposer): S&P 500 index never closes below 4000 in 2026. Winning Condition (Counter): S&P 500 index closes below 4000 at least once in 2026."
+  },
+  {
+    title: "[TEST] Tesla WILL NOT release a $25k car by 2027",
+    category: "tech",
+    description: "[TEST] This bet predicts that Tesla will fail to bring a mass-market electric vehicle with a starting price of $25,000 USD or less to market by the start of 2027.",
+    terms: "[TEST] Winning Condition (Proposer): No Tesla model starts at $25k or less by Jan 1, 2027. Winning Condition (Counter): Tesla releases a model for $25k or less before the deadline."
+  },
+  {
+    title: "[TEST] Donald Trump WILL NOT serve a full term as President",
+    category: "politics",
+    description: "[TEST] This bet predicts that Donald Trump will not complete his full four-year term as President of the United States after taking office.",
+    terms: "[TEST] Winning Condition (Proposer): Donald Trump leaves office before the end of his four-year term. Winning Condition (Counter): Donald Trump serves his full four-year term."
   }
 ];
 

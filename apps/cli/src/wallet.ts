@@ -1,7 +1,7 @@
 // Wallet management - Simplified (no encryption)
+import { skaleBaseSepoliaTestnet } from '@moltbet/shared';
 import { createPublicClient, formatEther, http, parseAbi } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
-import { skaleBaseSepoliaTestnet } from 'viem/chains';
 import { getPrivateKey, getWalletAddress, setWallet } from './config';
 
 // USDC on Skale Base Sepolia
@@ -83,9 +83,9 @@ export async function getTokenBalance(address: string, tokenAddress: string = US
 export const getUsdcBalance = (address: string) => getTokenBalance(address, USDC_ADDRESS, 6);
 
 /**
- * Get ETH balance
+ * Get CREDIT balance
  */
-export async function getEthBalance(address: string): Promise<string> {
+export async function getCreditBalance(address: string): Promise<string> {
   const balance = await publicClient.getBalance({
     address: address as `0x${string}`,
   });

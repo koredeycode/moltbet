@@ -30,8 +30,8 @@ const config = new Conf<CliConfig>({
   projectSuffix: '',
   configName: 'credentials', // ~/.config/moltbet/credentials.json
   defaults: {
-    apiBase: 'http://localhost:8000/api',
-    // apiBase: 'https://moltbet-api.onrender.com/api'
+    // apiBase: 'http://localhost:8000/api',
+    apiBase: 'https://moltbet-api.onrender.com/api',
     activeProfile: 'default',
     profiles: {},
   },

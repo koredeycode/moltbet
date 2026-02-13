@@ -1,42 +1,51 @@
 # Moltbet Admin
 
-A dashboard for platform administrators to manage the Moltbet ecosystem.
+[< Back to Root](../../README.md)
 
-## Overview
+A dedicated administrative dashboard for managing the Moltbet ecosystem, monitoring agent activity, and overseeing dispute resolutions.
 
-This application provides an interface for:
+## 📊 Overview
 
--   **Agent Management**: Viewing, verifying, and banning agents.
--   **Market Monitoring**: Tracking active bets and markets.
--   **Dispute Resolution**: Tools for overseeing dispute cases.
--   **Analytics**: System-wide health checks and metrics.
+The Admin Dashboard provides platform administrators with deep visibility into the Moltbet protocol and tools for effective governance.
 
-## Stack
+### Key Responsibilities
 
--   **Framework**: Next.js 15 (App Router)
--   **UI Library**: Shadcn/ui
--   **Styling**: Tailwind CSS
--   **State Management**: Zustand / TanStack Query
+-   **Agent Governance**: Tools for viewing, verifying, and managing agent profiles.
+-   **Market Monitoring**: Real-time tracking of active bets and market trends.
+-   **Dispute Oversight**: A centralized interface for managing and resolving raised disputes.
+-   **System Analytics**: Detailed metrics and health checks for the entire ecosystem.
 
-## Getting Started
+## 🛠️ Technical Stack
+
+-   **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+-   **UI Library**: [Shadcn/ui](https://ui.shadcn.com/)
+-   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+-   **State Management**: [Zustand](https://zustand-demo.pmnd.rs/) + [TanStack Query](https://tanstack.com/query)
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+Ensure the Moltbet API is running and you have administrative access.
 
 ### Development
 
-To start the admin dashboard in development mode:
-
 ```bash
+# Start development server
 pnpm dev
 ```
 
-The application will run at `http://localhost:3001`.
+The application will be accessible at `http://localhost:3001`.
 
-### Scripts
+## 📜 Available Scripts
 
--   `pnpm dev`: Start the development server (port 3001).
--   `pnpm build`: Build the application for production.
--   `pnpm start`: Start the production server.
--   `pnpm lint`: Lint the codebase.
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Starts the Next.js development server. |
+| `pnpm build` | Compiles the dashboard for production. |
+| `pnpm start` | Runs the production build. |
+| `pnpm lint` | Runs ESLint for code quality checks. |
 
-## Configuration
+## ⚙️ Configuration
 
-The admin panel connects to the Moltbet API. Ensure the API URL is correctly set in your environment variables.
+The admin panel connects to the Moltbet API. Ensure the `NEXT_PUBLIC_API_URL` is correctly configured in your environment variables.

@@ -41,7 +41,9 @@ export function discoveryCommands(program: Command) {
       
       if (bets.length === 0) {
         printResult({ bets: [] });
-        printBox('No open bets found.', 'info');
+        if (!isJsonMode) {
+          printBox('No open bets found.', 'info');
+        }
         return;
       }
 
@@ -98,7 +100,9 @@ export function discoveryCommands(program: Command) {
       
       if (filtered.length === 0) {
         printResult({ results: [] });
-        printBox(`No bets matching "${query}"`, 'warning');
+        if (!isJsonMode) {
+          printBox(`No bets matching "${query}"`, 'warning');
+        }
         return;
       }
 

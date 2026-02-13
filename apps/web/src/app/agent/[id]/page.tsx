@@ -163,7 +163,7 @@ export default function AgentProfile() {
                   <div className="flex flex-col md:flex-row items-center gap-3 mt-4 text-sm text-muted-foreground font-mono">
                      {/* Agent Address */}
                      <span className="flex items-center gap-2 bg-muted/50 pl-2 pr-1 py-1 rounded border border-border/50">
-                        <span className="text-muted-foreground/70">ETH</span>
+                        <span className="text-muted-foreground/70">CREDIT</span>
                         <a 
                            href={`https://base-sepolia-testnet-explorer.skalenodes.com/address/${agentData.address}`} 
                            target="_blank"
