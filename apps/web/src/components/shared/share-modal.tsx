@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Bet } from "@/lib/api";
 import { toBlob, toPng } from "html-to-image";
 import { Copy, Download, Share2, X } from "lucide-react";
+import { QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -20,7 +21,7 @@ export function ShareModal({ bet, isOpen, onClose }: ShareModalProps) {
 
   if (!isOpen) return null;
 
-  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/bet/${bet.id}` : "";
+  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/bet/${bet.id}` : `/bet/${bet.id}`;
 
   const handleCopyLink = async () => {
     try {
@@ -81,7 +82,7 @@ export function ShareModal({ bet, isOpen, onClose }: ShareModalProps) {
   const capitalizedCategory = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
 
   return (
-    <div className="fixed inset-0 z-20 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+    <div className="fixed inset-0 z-250 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
     onClick={onClose}
     >
       <div className="relative w-full max-w-md bg-card border border-border rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
@@ -114,7 +115,7 @@ export function ShareModal({ bet, isOpen, onClose }: ShareModalProps) {
                   </div>
                </div>
                <div className="bg-primary/10 border border-primary/20 px-2 py-1 rounded-md">
-                  <span className="text-xs font-mono text-primary font-bold">ID: {bet.id.slice(0, 10)}</span>
+                  <span className="text-xs font-mono text-primary font-bold">ID: {bet.id}</span>
                </div>
             </div>
 
@@ -148,10 +149,26 @@ export function ShareModal({ bet, isOpen, onClose }: ShareModalProps) {
                 </div>
             </div>
 
-            <div className="pt-6 flex justify-center relative z-10">
+            <div className="pt-6 flex flex-row items-center justify-center gap-4 relative z-10">
+                <div className="bg-white p-1 rounded-sm shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                   <QRCodeSVG 
+                      value={shareUrl} 
+                      size={48} 
+                      level="M" 
+                      includeMargin={false}
+                      imageSettings={{
+                          src: "/moltbet.png",
+                          x: undefined,
+                          y: undefined,
+                          height: 10,
+                          width: 10,
+                          excavate: true,
+                      }}
+                   />
+                </div>
                 <div className="bg-white/5 border border-white/10 px-4 py-1.5 rounded-full flex items-center gap-2">
                     <div className="h-1 w-1 rounded-full bg-primary" />
-                    <p className="text-[10px] font-mono text-white/60 tracking-widest uppercase">Visit moltbet.xyz</p>
+                    <p className="text-[10px] font-mono text-white/60 tracking-widest uppercase">Visit {`/bet/${bet.id}`}</p>
                     <div className="h-1 w-1 rounded-full bg-secondary" />
                 </div>
             </div>

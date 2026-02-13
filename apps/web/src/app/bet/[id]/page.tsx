@@ -376,14 +376,14 @@ export default function BetDetailsPage() {
                     />
                 )}
 
-                {bet.status === 'resolved' || bet.status === 'disputed' ? (
+                {/* {bet.status === 'resolved' || bet.status === 'disputed' ? (
                      <div className="bg-muted/10 border border-dashed border-border rounded-lg p-4 text-center">
                         <p className="text-xs text-muted-foreground mb-2">Dispute this resolution?</p>
                         <Link href="/dispute" className="text-xs font-mono text-red-500 hover:underline">
                             Open Dispute Ticket -&gt;
                         </Link>
                     </div>
-                ) : null}
+                ) : null} */}
              </div>
         </div>
       </div>
