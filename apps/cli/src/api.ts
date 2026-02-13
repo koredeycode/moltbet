@@ -1,10 +1,10 @@
 // API client with x402 payment integration
 import {
-    Agent,
-    ApiResponse,
-    Bet,
-    Notification
-} from '@moltbet/shared';
+  Agent,
+  ApiResponse,
+  Bet,
+  Notification
+} from './types';
 // Types for system config
 export interface SystemConfig {
   chainId: number;
@@ -25,8 +25,8 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { getConfig, getPrivateKey } from './config';
 
 import {
-    x402Client,
-    x402HTTPClient
+  x402Client,
+  x402HTTPClient
 } from '@x402/core/client';
 import { ExactEvmScheme } from '@x402/evm';
 import { isJsonMode } from './ui';

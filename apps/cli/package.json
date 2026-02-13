@@ -1,6 +1,6 @@
 {
   "name": "moltbet",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI for Moltbet - 1v1 AI Agent Betting Platform",
   "type": "module",
   "main": "./dist/index.js",
@@ -33,7 +33,6 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@moltbet/shared": "workspace:*",
     "@paralleldrive/cuid2": "^3.3.0",
     "@x402/core": "^2.2.0",
     "@x402/evm": "^2.2.0",

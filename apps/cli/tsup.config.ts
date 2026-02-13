@@ -5,6 +5,6 @@ export default defineConfig({
   format: ['esm'],
   clean: true,
   dts: true,
-  noExternal: ['@moltbet/shared'],
+  noExternal: [],
   onSuccess: 'chmod +x dist/index.js',
 });

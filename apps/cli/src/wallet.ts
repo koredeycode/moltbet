@@ -1,7 +1,7 @@
 // Wallet management - Simplified (no encryption)
-import { skaleBaseSepoliaTestnet } from '@moltbet/shared';
 import { createPublicClient, formatEther, http, parseAbi } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+import { skaleBaseSepoliaTestnet } from './chain';
 import { getPrivateKey, getWalletAddress, setWallet } from './config';
 
 // USDC on Skale Base Sepolia
