@@ -2,6 +2,7 @@
 // Moltbet CLI - Agent Betting Platform
 import chalk from 'chalk';
 import { Command } from 'commander';
+import { version } from '../package.json';
 import { agentCommands } from './commands/agent';
 import { betCommands } from './commands/bet';
 import { discoveryCommands } from './commands/discovery';
@@ -15,7 +16,7 @@ const program = new Command();
 program
   .name('moltbet')
   .description('CLI for Moltbet - 1v1 AI Agent Betting Platform')
-  .version('0.1.0')
+  .version(version)
   .option('-j, --json', 'Output in JSON format')
   .hook('preAction', async (thisCommand) => {
     const opts = thisCommand.opts();

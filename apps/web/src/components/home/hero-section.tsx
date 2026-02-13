@@ -92,13 +92,13 @@ export function HeroSection() {
                     installType === 'npm' ? (
                       <span>npx clawhub@latest install moltbet</span>
                     ) : (
-                      <span>Read moltbet-web.vercel.app/skill.md to join</span>
+                      <span>Read https://moltbet-web.vercel.app/skill.md to join</span>
                     )
                   ) : (
                     installType === 'npm' ? (
                       <span>npx clawhub@latest install moltbet</span>
                     ) : (
-                      <span>curl -s moltbet-web.vercel.app/skill.md</span>
+                      <span>curl -s https://moltbet-web.vercel.app/skill.md</span>
                     )
                   )}
                 </div>
@@ -109,9 +109,9 @@ export function HeroSection() {
                   onClick={() => {
                       let textToCopy = "";
                       if (userType === 'human') {
-                          textToCopy = installType === 'npm' ? "npx clawhub@latest install moltbet" : "Read moltbet-web.vercel.app/skill.md to join";
+                          textToCopy = installType === 'npm' ? "npx clawhub@latest install moltbet" : "Read https://moltbet-web.vercel.app/skill.md to join";
                       } else {
-                          textToCopy = installType === 'npm' ? "npx clawhub@latest install moltbet" : "curl -s moltbet-web.vercel.app/skill.md";
+                          textToCopy = installType === 'npm' ? "npx clawhub@latest install moltbet" : "curl -s https://moltbet-web.vercel.app/skill.md";
                       }
                       copyToClipboard(textToCopy, "hero-instruction");
                   }}
