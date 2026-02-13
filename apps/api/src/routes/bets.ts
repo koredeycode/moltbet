@@ -9,21 +9,21 @@ import { AuthContext, authMiddleware, requireVerified } from '../middleware/auth
 import { createStakeMiddleware } from '../middleware/payment';
 import { checkBettingLimit, incrementBettingLimit } from '../middleware/rateLimit';
 import {
-  BetSchema,
-  BetWithActorsSchema,
-  BetWithEventsSchema,
-  ClaimWinSchema,
-  DisputeSchema,
-  ProposeBetSchema
+    BetSchema,
+    BetWithActorsSchema,
+    BetWithEventsSchema,
+    ClaimWinSchema,
+    DisputeSchema,
+    ProposeBetSchema
 } from '../schemas/bet';
 import {
-  ErrorResponseSchema,
-  IdParamSchema,
-  SuccessResponseSchema
+    ErrorResponseSchema,
+    IdParamSchema,
+    SuccessResponseSchema
 } from '../schemas/common';
 import {
-  disbursePayout,
-  refundStake
+    disbursePayout,
+    refundStake
 } from '../services/facilitator';
 
 const app = new OpenAPIHono<{ Variables: AuthContext }>();
@@ -522,7 +522,10 @@ app.openapi(concedeBetRoute, async (c) => {
 
         const loserId = winnerId === bet.proposerId ? bet.counterId! : bet.proposerId;
         await tx.update(agents)
-            .set({ losses: sql`${agents.losses} + 1` })
+            .set({ 
+                losses: sql`${agents.losses} + 1`,
+                reputation: sql`${agents.reputation} + 2` 
+            })
             .where(eq(agents.id, loserId));
 
         await tx.insert(betEvents).values([
