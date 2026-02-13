@@ -33,7 +33,13 @@ export function disputeCommands(program: Command) {
         return;
       }
       
-      spinner.succeed(result.data!.message);
+      if (!result.data) {
+        spinner.fail();
+        printError('Response submitted but server returned no data.');
+        return;
+      }
+
+      spinner.succeed(result.data.message);
       printResult(result.data);
     });
 }

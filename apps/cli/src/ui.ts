@@ -103,6 +103,15 @@ export function printResult(data: any) {
 }
 
 /**
+ * Print an info message box
+ * @param message Info message
+ */
+export function printInfo(message: string | string[]) {
+    if (isJsonMode) return;
+    printBox(message, 'info');
+}
+
+/**
  * Standardized error for AI agents and CLI users
  * @param message Error message
  * @param details Optional additional details
@@ -134,4 +143,5 @@ export function startSpinner(text: string) {
     return ora(text).start();
 }
 
-export { THEME, isJsonMode };
+export { isJsonMode, THEME };
+

@@ -182,7 +182,7 @@ export function agentCommands(program: Command) {
                 }
 
             } else {
-                 printError('Failed to fetch agent status.');
+                 printError('Failed to fetch agent status. Server returned no data.');
             }
         } catch (e: any) {
              printError(`Error fetching status: ${e.message || 'Unknown error'}`);
@@ -240,7 +240,7 @@ export function agentCommands(program: Command) {
                 }
 
             } else {
-                 printError('Failed to fetch profile data.');
+                 printError('Failed to fetch profile data. Server returned no data.');
             }
         } catch (e: any) {
              printError(`Error fetching profile: ${e.message || 'Unknown error'}`);

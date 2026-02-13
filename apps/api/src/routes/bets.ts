@@ -1,7 +1,6 @@
 // Betting routes with x402 payment integration
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import { and, desc, eq, or, sql } from 'drizzle-orm';
-import { Context } from 'hono';
 import { API_CONFIG } from '../config';
 import { agents, betEvents, bets, createId, getDb, notifications } from '../db';
 import { disputes } from '../db/schema/disputes';
@@ -9,21 +8,21 @@ import { AuthContext, authMiddleware, requireVerified } from '../middleware/auth
 import { createStakeMiddleware } from '../middleware/payment';
 import { checkBettingLimit, incrementBettingLimit } from '../middleware/rateLimit';
 import {
-    BetSchema,
-    BetWithActorsSchema,
-    BetWithEventsSchema,
-    ClaimWinSchema,
-    DisputeSchema,
-    ProposeBetSchema
+  BetSchema,
+  BetWithActorsSchema,
+  BetWithEventsSchema,
+  ClaimWinSchema,
+  DisputeSchema,
+  ProposeBetSchema
 } from '../schemas/bet';
 import {
-    ErrorResponseSchema,
-    IdParamSchema,
-    SuccessResponseSchema
+  ErrorResponseSchema,
+  IdParamSchema,
+  SuccessResponseSchema
 } from '../schemas/common';
 import {
-    disbursePayout,
-    refundStake
+  disbursePayout,
+  refundStake
 } from '../services/facilitator';
 
 const app = new OpenAPIHono<{ Variables: AuthContext }>();
@@ -51,22 +50,8 @@ const disputeSchema = z.object({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Helper: Payment Check Wrapper
+// Logic
 // ─────────────────────────────────────────────────────────────────────────────
-
-async function ensurePayment(c: Context, stake: string, description: string) {
-  const mw = createStakeMiddleware(stake, description);
-  let passed = false;
-  
-  // Run the middleware
-  // If payment is missing/invalid, it returns a Response (402 or error)
-  // If payment is valid, it calls next()
-  const response = await mw(c, async () => {
-    passed = true;
-  });
-
-  return { passed, response };
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /bets/propose - Create a new bet
@@ -128,10 +113,13 @@ app.use('/:id/concede', authMiddleware, requireVerified);
 app.use('/:id/cancel', authMiddleware, requireVerified);
 app.use('/:id/dispute', authMiddleware, requireVerified);
 
-app.openapi(proposeBetRoute, async (c) => {
+// ─────────────────────────────────────────────────────────────────────────────
+// Dynamic Payment Middlewares
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Dynamic middleware for Propose (extracts stake from body)
+app.use('/propose', async (c, next) => {
   const agent = c.get('agent')!;
-  const body = c.req.valid('json');
-  const db = getDb();
   
   // 1. Check action limit
   try {
@@ -141,16 +129,53 @@ app.openapi(proposeBetRoute, async (c) => {
     return c.json({ success: false as const, error: message }, 429);
   }
 
-  // 2. Check x402 Payment
-  const { passed, response } = await ensurePayment(
-    c, 
-    body.stake, 
-    `Create Bet: ${body.title} (${body.stake} USDC)`
-  );
+  // 2. Parse body to get stake
+  // Note: We use c.req.raw.clone() or similar if we need to read body in middleware
+  // but hono's c.req.json() is cached after first call.
+  const body = await c.req.json();
+  if (!body.stake) return next();
 
-  if (!passed) return response as any;
+  // 3. Initialize and execute x402
+  const mw = createStakeMiddleware(body.stake, `Create Bet: ${body.title || 'Untitled'} (${body.stake} USDC)`);
+  return mw(c, next);
+});
 
-  // 3. Payment Verified -> Create Bet
+// Dynamic middleware for Counter (extracts stake from DB)
+app.use('/:id/counter', async (c, next) => {
+  const agent = c.get('agent')!;
+  const betId = c.req.param('id');
+  const db = getDb();
+
+  // 1. Check action limit
+  try {
+    checkBettingLimit(agent.id);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Rate limit exceeded';
+    return c.json({ success: false as const, error: message }, 429);
+  }
+
+  // 2. Get the bet
+  const bet = await db.query.bets.findFirst({
+    where: eq(bets.id, betId),
+  });
+
+  if (!bet) return c.json({ success: false as const, error: 'Bet not found' }, 404);
+  if (bet.status !== 'open') return c.json({ success: false as const, error: 'Bet is not open' }, 400);
+  if (bet.proposerId === agent.id) return c.json({ success: false as const, error: 'Cannot counter your own bet' }, 400);
+  if (new Date() > bet.expiresAt) return c.json({ success: false as const, error: 'Bet has expired' }, 400);
+
+  // 3. Initialize and execute x402
+  const mw = createStakeMiddleware(bet.stake, `Counter Bet: ${bet.title} (${bet.stake} USDC)`);
+  return mw(c, next);
+});
+
+app.openapi(proposeBetRoute, async (c) => {
+  const agent = c.get('agent')!;
+  const body = c.req.valid('json');
+  const db = getDb();
+  
+  // Payment and Rate Limit are now handled by app.use('/propose')
+
   try {
     const expiresAt = new Date(Date.now() + (body.expiresInHours || 168) * 60 * 60 * 1000);
     const betId = createId();
@@ -187,7 +212,7 @@ app.openapi(proposeBetRoute, async (c) => {
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error("Propose failed:", error);
+    console.error(`[API] Propose failed:`, error);
     return c.json({ success: false as const, error: errorMessage }, 500);
   }
 });
@@ -232,34 +257,15 @@ app.openapi(counterBetRoute, async (c) => {
   const { id: betId } = c.req.valid('param');
   const db = getDb();
 
-  // 1. Check action limit
-  try {
-    checkBettingLimit(agent.id);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Rate limit exceeded';
-    return c.json({ success: false as const, error: message }, 429);
-  }
-
-  // 2. Get the bet
+  // Payment, Rate Limit, and Bet Validation are now handled by app.use('/:id/counter')
+  
+  // Fetch bet again to ensure we have it in the handler
   const bet = await db.query.bets.findFirst({
     where: eq(bets.id, betId),
   });
 
   if (!bet) return c.json({ success: false as const, error: 'Bet not found' }, 404);
-  if (bet.status !== 'open') return c.json({ success: false as const, error: 'Bet is not open' }, 400);
-  if (bet.proposerId === agent.id) return c.json({ success: false as const, error: 'Cannot counter your own bet' }, 400);
-  if (new Date() > bet.expiresAt) return c.json({ success: false as const, error: 'Bet has expired' }, 400);
 
-  // 3. Check x402 Payment (Counter must match stake)
-  const { passed, response } = await ensurePayment(
-    c, 
-    bet.stake, 
-    `Counter Bet: ${bet.title} (${bet.stake} USDC)`
-  );
-
-  if (!passed) return response as any;
-
-  // 4. Payment Verified -> Update Bet
   try {
     await db.transaction(async (tx) => {
       await tx
@@ -270,7 +276,10 @@ app.openapi(counterBetRoute, async (c) => {
           counteredAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(bets.id, betId));
+        .where(and(
+          eq(bets.id, betId),
+          eq(bets.status, 'open') // Extra safety check
+        ));
 
       await tx.insert(betEvents).values({
         betId: bet.id,
@@ -299,7 +308,7 @@ app.openapi(counterBetRoute, async (c) => {
 
   } catch(error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error("Counter failed:", error);
+    console.error("[API] Counter failed:", error);
     return c.json({ success: false as const, error: errorMessage }, 500);
   }
 });

@@ -31,7 +31,7 @@ const app = new OpenAPIHono();
 // Middleware
 // ─────────────────────────────────────────────────────────────────────────────
 
-app.use('*', cors({origin: ["http://localhost:3000", "http://localhost:3001"], credentials: true, allowMethods: ['POST', 'GET', 'OPTIONS']}));
+app.use('*', cors({origin: ["http://localhost:3000", "http://localhost:3001", env.APP_URL], credentials: true, allowMethods: ['POST', 'GET', 'OPTIONS']}));
 app.use('*', logger());
 app.use('*', prettyJSON());
 app.use('*', timing());
@@ -98,7 +98,7 @@ app.doc('/api/open-api.json', {
     description: '1v1 betting platform for AI agents on Skale Base Sepolia',
   },
   servers: [
-    { url: 'https://moltbet.io', description: 'Production' },
+    { url: 'https://moltbet-api.onrender.com', description: 'Production' },
     { url: 'http://localhost:8000', description: 'Development' },
   ],
   tags: [

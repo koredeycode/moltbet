@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import { api, SystemConfig } from '../api';
 import { hasApiKey, hasWallet } from '../config';
-import { isJsonMode, printBox, printError, printKeyValue, printResult, printSectionHeader, startSpinner } from '../ui';
+import { isJsonMode, printBox, printError, printInfo, printKeyValue, printResult, printSectionHeader, startSpinner } from '../ui';
 
 function requireAuth() {
   if (!hasApiKey()) {
@@ -77,7 +77,15 @@ export function betCommands(program: Command) {
       
       spinner.succeed('Bet proposed!');
       
-      const betData = result.data!.bet;
+      if (!result.data) {
+        printInfo([
+          'The request went through successfully, but the server returned an empty body.',
+          'Your bet was likely created. You can verify with: moltbet bet list'
+        ]);
+        return;
+      }
+
+      const betData = result.data.bet;
       printResult({ bet: betData });
       
       if (!isJsonMode) {
@@ -109,7 +117,14 @@ export function betCommands(program: Command) {
       
       spinner.stop();
       
-      if (result.data!.bets.length === 0) {
+      if (!result.data) {
+        printError('No bets data received.');
+        return;
+      }
+
+      const { bets } = result.data;
+      
+      if (bets.length === 0) {
         printResult({ bets: [] });
         printBox([
             'No bets yet.',
@@ -118,13 +133,13 @@ export function betCommands(program: Command) {
         return;
       }
 
-      printResult({ bets: result.data!.bets });
+      printResult({ bets });
       
       if (!isJsonMode) {
         printSectionHeader('Your Bets');
         console.log();
         
-        for (const bet of result.data!.bets) {
+        for (const bet of bets) {
           const statusColor = 
             bet.status === 'open' ? chalk.blue :
             bet.status === 'countered' ? chalk.yellow :
@@ -155,7 +170,12 @@ export function betCommands(program: Command) {
       }
       
       spinner.stop();
-      const betData = result.data!.bet;
+      if (!result.data) {
+        printError('No bet data found in response.');
+        return;
+      }
+
+      const betData = result.data.bet;
       
       printResult({ bet: betData });
 
@@ -190,7 +210,16 @@ export function betCommands(program: Command) {
         return;
       }
       
-      spinner.succeed(result.data!.message);
+      spinner.succeed('Bet countered!');
+
+      if (!result.data) {
+        printInfo([
+          'The request went through successfully, but the server returned an empty body.',
+          'Your counter-bet was likely placed. You can verify with: moltbet bet list'
+        ]);
+        return;
+      }
+      
       printResult(result.data);
     });
   
@@ -211,7 +240,16 @@ export function betCommands(program: Command) {
         return;
       }
       
-      spinner.succeed(result.data!.message);
+      if (!result.data) {
+        spinner.succeed('Win claimed!');
+        printInfo([
+          'The request went through successfully, but the server returned an empty body.',
+          'Your claim was likely submitted. You can verify with: moltbet bet list'
+        ]);
+        return;
+      }
+      
+      spinner.succeed(result.data.message);
       printResult(result.data);
     });
   
@@ -231,11 +269,20 @@ export function betCommands(program: Command) {
         return;
       }
       
-      spinner.succeed(result.data!.message);
+      if (!result.data) {
+        spinner.succeed('Bet conceded!');
+        printInfo([
+          'The request went through successfully, but the server returned an empty body.',
+          'You have likely conceded. You can verify with: moltbet bet list'
+        ]);
+        return;
+      }
+
+      spinner.succeed(result.data.message);
       printResult(result.data);
 
-      if (!isJsonMode && result.data!.txHash) {
-        printKeyValue('Payout Tx', chalk.cyan(result.data!.txHash));
+      if (!isJsonMode && result.data.txHash) {
+        printKeyValue('Payout Tx', chalk.cyan(result.data.txHash));
       }
     });
   
@@ -257,11 +304,20 @@ export function betCommands(program: Command) {
         return;
       }
       
+      if (!result.data) {
+        spinner.succeed('Dispute filed!');
+        printInfo([
+          'The request went through successfully, but the server returned an empty body.',
+          'Your dispute was likely filed. You can verify with: moltbet bet list'
+        ]);
+        return;
+      }
+
       spinner.succeed('Dispute filed!');
       printResult(result.data);
 
       if (!isJsonMode) {
-        printKeyValue('Dispute ID', result.data!.disputeId);
+        printKeyValue('Dispute ID', result.data.disputeId);
       }
     });
   
@@ -281,11 +337,20 @@ export function betCommands(program: Command) {
         return;
       }
       
-      spinner.succeed(result.data!.message);
+      if (!result.data) {
+        spinner.succeed('Bet cancelled!');
+        printInfo([
+          'The request went through successfully, but the server returned an empty body.',
+          'The bet was likely cancelled and refunded. Use: moltbet bet list'
+        ]);
+        return;
+      }
+
+      spinner.succeed(result.data.message);
       printResult(result.data);
 
-      if (!isJsonMode && result.data!.txHash) {
-        printKeyValue('Refund Tx', chalk.cyan(result.data!.txHash));
+      if (!isJsonMode && result.data.txHash) {
+        printKeyValue('Refund Tx', chalk.cyan(result.data.txHash));
       }
     });
 }

@@ -32,17 +32,26 @@ export function discoveryCommands(program: Command) {
       
       spinner.stop();
       
-      if (result.data!.bets.length === 0) {
+      if (!result.data) {
+        printError('No data received from feed.');
+        return;
+      }
+
+      const { bets } = result.data;
+      
+      if (bets.length === 0) {
         printResult({ bets: [] });
         printBox('No open bets found.', 'info');
         return;
       }
 
+      printResult({ bets });
+
       if (!isJsonMode) {
         printSectionHeader('Open Bets');
         console.log();
         
-        for (const bet of result.data!.bets) {
+        for (const bet of bets) {
           console.log(chalk.cyan(`[${bet.id}]`), chalk.bold(bet.title));
           console.log(`  ${bet.description}`);
           console.log(`  ${chalk.greenBright(bet.stake + ' USDC')} ${bet.category ? chalk.dim(`#${bet.category}`) : ''}`);
@@ -76,7 +85,12 @@ export function discoveryCommands(program: Command) {
       
       spinner.stop();
       
-      const filtered = result.data!.bets.filter(
+      if (!result.data) {
+        printError('No data received during search.');
+        return;
+      }
+
+      const filtered = result.data.bets.filter(
         bet => 
           bet.title.toLowerCase().includes(query.toLowerCase()) ||
           bet.description.toLowerCase().includes(query.toLowerCase())
@@ -121,21 +135,28 @@ export function discoveryCommands(program: Command) {
       
       spinner.stop();
       
+      if (!result.data) {
+        printError('No notifications data received.');
+        return;
+      }
+
+      const { notifications, unreadCount } = result.data;
+      
       printResult({ 
-          notifications: result.data!.notifications,
-          unreadCount: result.data!.unreadCount 
+          notifications,
+          unreadCount 
       });
 
       if (!isJsonMode) {
-        if (result.data!.notifications.length === 0) {
+        if (notifications.length === 0) {
           printBox('No notifications.', 'info');
           return;
         }
         
-        printSectionHeader(`Notifications (${result.data!.unreadCount} unread)`);
+        printSectionHeader(`Notifications (${unreadCount} unread)`);
         console.log();
         
-        for (const notif of result.data!.notifications) {
+        for (const notif of notifications) {
           const icon = notif.read ? '  ' : '• ';
           const color = notif.read ? chalk.dim : chalk.white;
           
@@ -165,13 +186,20 @@ export function discoveryCommands(program: Command) {
       
       spinner.stop();
       
-      printResult({ agents: result.data!.agents });
+      if (!result.data) {
+        printError('No leaderboard data received.');
+        return;
+      }
+
+      const { agents } = result.data;
+      
+      printResult({ agents });
 
       if (!isJsonMode) {
         printSectionHeader('Leaderboard');
         console.log();
         
-        for (const agent of result.data!.agents) {
+        for (const agent of agents) {
           const medal = 
             agent.rank === 1 ? '🥇' :
             agent.rank === 2 ? '🥈' :
@@ -205,9 +233,16 @@ export function discoveryCommands(program: Command) {
       
       spinner.stop();
       
-      printResult({ unreadCount: result.data!.unreadCount });
+      if (!result.data) {
+        printError('No heartbeat data received.');
+        return;
+      }
 
-      if (result.data!.unreadCount === 0) {
+      const { unreadCount } = result.data;
+      
+      printResult({ unreadCount });
+
+      if (unreadCount === 0) {
         if (!isJsonMode) {
             console.log(chalk.greenBright('✓ No pending actions'));
         }
@@ -215,7 +250,7 @@ export function discoveryCommands(program: Command) {
       }
       
       printBox([
-          `${result.data!.unreadCount} notification(s) require attention`,
+          `${unreadCount} notification(s) require attention`,
           'Run: moltbet notifications'
       ], 'warning');
     });
