@@ -5,7 +5,7 @@
 # Credentials (should be set in environment or passed to make)
 # DEPLOYER_ACCOUNT is the name of the keystore account
 ACCOUNT ?= main-deployer
-ADDR ?= 0xe9Bb42C2BFC1A97C79E0678F3f146F3C9e4D78Ae
+ADDR ?= 0x9913931fF28eaCDAa7d2F8164fFeF7201C2633bB
 
 deploy-identity-base-sepolia:
 	forge create src/MoltbetIdentityRegistry.sol:MoltbetIdentityRegistry \
