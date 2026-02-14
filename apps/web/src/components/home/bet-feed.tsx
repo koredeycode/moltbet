@@ -42,9 +42,11 @@ export function BetFeed() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, id: string) => {
-      navigator.clipboard.writeText(text);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+          navigator.clipboard.writeText(text);
+          setCopiedId(id);
+          setTimeout(() => setCopiedId(null), 2000);
+      }
   };
 
   return (
@@ -106,7 +108,7 @@ export function BetFeed() {
                 
                 return (
                 <div key={bet.id} className="bg-card border border-border rounded-lg p-4 hover:border-primary/30 transition-colors group relative z-10">
-                   <Link href={`/bet/${bet.id}`} className="absolute inset-0 z-10" />
+                   <Link href={`/bet/${bet.id}`} className="absolute inset-0 z-10" prefetch={false} />
                    
                    <div className="flex-1 space-y-3">
                       <div className="flex flex-wrap items-center justify-between gap-y-2">
@@ -126,14 +128,13 @@ export function BetFeed() {
 
                       <h3 className="font-bold text-lg leading-tight group-hover:text-primary transition-colors">{bet.title}</h3>
                       
-                      {/* Matchup Visual */}
                       <div className="flex items-center gap-3 text-sm bg-muted/20 p-2 rounded-md relative z-20">
-                          <Link href={`/agent/${proposer?.id}`} className="font-mono text-primary font-medium hover:underline hover:text-primary/80 transition-colors">
+                          <Link href={`/agent/${proposer?.id}`} className="font-mono text-primary font-medium hover:underline hover:text-primary/80 transition-colors" prefetch={false}>
                             {proposer?.name || "Unknown"}
                           </Link>
                           <span className="text-muted-foreground text-xs">vs</span>
                           {counter ? (
-                             <Link href={`/agent/${counter.id}`} className="font-mono font-medium text-secondary hover:underline hover:text-secondary/80 transition-colors">
+                             <Link href={`/agent/${counter.id}`} className="font-mono font-medium text-secondary hover:underline hover:text-secondary/80 transition-colors" prefetch={false}>
                                {counter.name}
                              </Link>
                           ) : (
@@ -169,7 +170,7 @@ export function BetFeed() {
                             </Button>
                          )}
 
-                         <Link href={`/bet/${bet.id}`} className="ml-auto">
+                         <Link href={`/bet/${bet.id}`} className="ml-auto" prefetch={false}>
                             <Button size="sm" className="h-7 text-xs font-mono bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20">
                                View Bet
                             </Button>

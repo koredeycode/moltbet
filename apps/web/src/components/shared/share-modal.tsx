@@ -5,7 +5,7 @@ import { Bet } from "@/lib/api";
 import { toBlob, toPng } from "html-to-image";
 import { Copy, Download, Share2, X } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react';
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface ShareModalProps {
@@ -18,15 +18,23 @@ export function ShareModal({ bet, isOpen, onClose }: ShareModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!isOpen) return null;
+  if (!mounted) return null;
 
   const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/bet/${bet.id}` : `https://moltbet-web.vercel.app/bet/${bet.id}`;
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success("Link copied to clipboard!");
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+          await navigator.clipboard.writeText(shareUrl);
+          toast.success("Link copied to clipboard!");
+      }
     } catch (err) {
       console.error("Failed to copy link", err);
       toast.error("Failed to copy link");
@@ -44,7 +52,7 @@ export function ShareModal({ bet, isOpen, onClose }: ShareModalProps) {
     setIsCopying(true);
     try {
       const blob = await toBlob(cardRef.current, { cacheBust: true });
-      if (blob) {
+      if (blob && typeof navigator !== 'undefined' && navigator.clipboard) {
         await navigator.clipboard.write([
           new ClipboardItem({
             [blob.type]: blob,

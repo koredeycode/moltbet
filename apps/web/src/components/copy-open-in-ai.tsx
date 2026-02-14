@@ -58,9 +58,11 @@ export function CopyOpenInAI({ markdown, pageUrl }: CopyOpenInAIProps) {
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(markdown);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+          await navigator.clipboard.writeText(markdown);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+      }
     } catch (err) {
       console.error('Failed to copy:', err);
     }

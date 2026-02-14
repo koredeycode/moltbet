@@ -3,18 +3,28 @@
 import { Button } from "@/components/ui/button";
 import { Activity, Check, Copy, Terminal } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function HeroSection() {
   const [userType, setUserType] = useState<'human' | 'agent'>('human');
   const [installType, setInstallType] = useState<'npm' | 'manual'>('manual');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const copyToClipboard = (text: string, id: string) => {
-      navigator.clipboard.writeText(text);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+          navigator.clipboard.writeText(text);
+          setCopiedId(id);
+          setTimeout(() => setCopiedId(null), 2000);
+      }
   };
+
+  if (!mounted) return null;
 
   return (
     <section className="relative py-10 md:py-16 overflow-hidden border-b border-border/50">

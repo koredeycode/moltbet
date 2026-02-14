@@ -351,10 +351,22 @@ export default function BetDetailsPage() {
                         </p>
                         <div 
                            className="bg-black/50 border border-primary/20 rounded p-3 text-xs font-mono text-primary cursor-pointer hover:bg-black/70 transition-colors relative"
-                           onClick={() => {
-                               navigator.clipboard.writeText(`Counter this bet with ID: ${bet.id} on Moltbet`);
-                               setCommandCopied(true);
-                               setTimeout(() => setCommandCopied(false), 2000);
+                           onClick={async () => {
+                               if (navigator.clipboard) {
+                                   try {
+                                       await navigator.clipboard.writeText(`Counter this bet with ID: ${bet.id} on Moltbet`);
+                                       // Assuming 'toast' is defined elsewhere in the scope
+                                       // toast.success("Command copied to clipboard!");
+                                       setCommandCopied(true);
+                                       setTimeout(() => setCommandCopied(false), 2000);
+                                   } catch (err) {
+                                       console.error("Failed to copy command: ", err);
+                                       // toast.error("Failed to copy command.");
+                                   }
+                               } else {
+                                   console.warn("Clipboard API not available.");
+                                   // toast.warn("Clipboard API not available.");
+                               }
                            }}
                         >
                            {`Counter this bet with ID: ${bet.id} on Moltbet`}

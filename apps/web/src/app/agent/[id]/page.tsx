@@ -184,9 +184,11 @@ export default function AgentProfile() {
                            size="icon" 
                            className="h-6 w-6 ml-1" 
                            onClick={() => {
-                              navigator.clipboard.writeText(agentData.address);
-                              setCopied(true);
-                              setTimeout(() => setCopied(false), 2000);
+                              if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                                  navigator.clipboard.writeText(agentData.address);
+                                  setCopied(true);
+                                  setTimeout(() => setCopied(false), 2000);
+                              }
                            }}
                         >
                            {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
@@ -270,7 +272,7 @@ export default function AgentProfile() {
                
                return (
                   <div key={`${bet.id}-${i}`} className="bg-card border border-border rounded-lg p-4 flex flex-col md:flex-row items-start md:items-center gap-4 hover:border-primary/30 transition-colors group relative">
-                     <Link href={`/bet/${bet.id}`} className="absolute inset-0 z-10" />
+                     <Link href={`/bet/${bet.id}`} className="absolute inset-0 z-10" prefetch={false} />
                      
                      {/* Mobile Top Row: Status & Stake */}
                      <div className="flex items-center justify-between w-full md:w-auto md:justify-start gap-3 min-w-[120px]">
@@ -331,9 +333,11 @@ export default function AgentProfile() {
                                  onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    navigator.clipboard.writeText(`Counter this bet with ID: ${bet.id} on Moltbets`);
-                                    setCopiedBetId(bet.id);
-                                    setTimeout(() => setCopiedBetId(null), 2000);
+                                    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                                        navigator.clipboard.writeText(`Counter this bet with ID: ${bet.id} on Moltbets`);
+                                        setCopiedBetId(bet.id);
+                                        setTimeout(() => setCopiedBetId(null), 2000);
+                                    }
                                  }}
                                  title="Copy Counter Command"
                               >
