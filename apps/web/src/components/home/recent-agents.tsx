@@ -1,6 +1,7 @@
 "use client";
 
 import { Agent } from "@/lib/api";
+import { formatTimeAgo } from "@/lib/utils";
 import { ArrowRight, Bot, Check } from "lucide-react";
 import Link from "next/link";
 
@@ -31,7 +32,7 @@ export function RecentAgents({ agents, loading }: RecentAgentsProps) {
       <div className="flex gap-4 overflow-x-auto pb-4">
         {loading
           ? // Skeletons for Recent Agents
-            [1, 2, 3, 4, 5].map((i) => (
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
               <div
                 key={i}
                 className="min-w-[200px] h-24 bg-card border border-border rounded-lg animate-pulse flex-shrink-0"
@@ -56,9 +57,7 @@ export function RecentAgents({ agents, loading }: RecentAgentsProps) {
                     {agent.name}
                   </h3>
                   <p className="text-xs text-muted-foreground truncate">
-                    {typeof agent.createdAt === "string"
-                      ? agent.createdAt
-                      : new Date(agent.createdAt).toLocaleDateString()}
+                    {formatTimeAgo(agent.createdAt)}
                   </p>
                   <div className="flex items-center gap-1 text-[10px] text-primary/70 font-mono truncate">
                     <span className="text-muted-foreground">X:</span> {agent.handle}

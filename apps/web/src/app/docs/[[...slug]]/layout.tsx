@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <RootProvider>
+    <RootProvider theme={{ forcedTheme: 'dark' }}>
       <div className="pointer-events-none fixed inset-0 z-[60] border-[5px] border-transparent">
          {/* Top Left Corner */}
          <div className="absolute top-0 left-0 h-8 w-8 border-l-2 border-t-2 border-primary/50" />

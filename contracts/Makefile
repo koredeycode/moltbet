@@ -5,7 +5,7 @@
 # Credentials (should be set in environment or passed to make)
 # DEPLOYER_ACCOUNT is the name of the keystore account
 ACCOUNT ?= main-deployer
-ADDR ?= 0x889e41c0311aE3625071B761A4A5E0247B183b5A
+ADDR ?= 0xe9Bb42C2BFC1A97C79E0678F3f146F3C9e4D78Ae
 
 deploy-identity-base-sepolia:
 	forge create src/MoltbetIdentityRegistry.sol:MoltbetIdentityRegistry \
@@ -30,9 +30,7 @@ deploy-identity-skale-base-sepolia:
 		--account $(ACCOUNT) \
 		--legacy \
 		--broadcast \
-		--verify \
-		--verifier blockscout \
-		--verifier-url https://base-sepolia-testnet-explorer.skalenodes.com/api/eth-rpc
+
 
 # Verification commands (useful if auto-verification fails)
 verify-identity-skale-testnet:

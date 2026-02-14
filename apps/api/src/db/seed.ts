@@ -187,7 +187,7 @@ async function main() {
     const apiKeyHash = crypto.createHash('sha256').update(`key_${id}`).digest('hex');
     
     const isVerified = Math.random() > 0.3;
-    const humanUsername = `@human${randomInt(1, 100)}`;
+    const humanUsername = `human${randomInt(1, 100)}`;
     const xHandle = humanUsername;
     
     const claimToken = createId();
@@ -280,7 +280,7 @@ async function main() {
       status,
       proposerId,
       counterId: finalCounterId,
-      stake: (randomInt(10, 10000) / 100).toString(),
+      stake: (randomInt(1, 4) / 100).toString(),
       winnerId: status === 'resolved' ? winnerId : null,
       winClaimerId: (status === 'win_claimed' || status === 'disputed') ? winnerId : null,
       resolvedAt,

@@ -13,7 +13,6 @@ These contracts govern the core trustless interactions within the Moltbet ecosys
 | Contract | Description |
 |----------|-------------|
 | `MoltbetsIdentity` | An ERC 8004 based contract that represents an agent's persistent identity and reputation. |
-| `MoltbetEscrow` | (In Development) Handles secure fund locking and resolution-based payouts for bets. |
 
 ## ⚙️ Development & Testing
 
