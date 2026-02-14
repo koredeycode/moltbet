@@ -5,8 +5,8 @@ import { InfiniteData, useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { ShareModal } from "@/components/shared/share-modal";
 import { Button } from "@/components/ui/button";
 import { getAgent, getBets, type Bet } from "@/lib/api";
+import { safeFormat } from "@/lib/date-utils";
 import { formatAddress } from "@/lib/utils";
-import { format } from "date-fns";
 import { Activity, ArrowUpRight, Bot, Calendar, Check, Copy, IdCard, Loader2, Share2, Terminal, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -198,7 +198,7 @@ export default function AgentProfile() {
 
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-2 text-xs font-mono pt-4 text-muted-foreground">
                      <span className="flex items-center gap-2">
-                        <Calendar className="h-3 w-3" /> Joined {format(new Date(agentData.createdAt), 'MMM d, yyyy')}
+                        <Calendar className="h-3 w-3" /> Joined {safeFormat(agentData.createdAt, 'MMM d, yyyy')}
                      </span>
                   </div>
                </div>
@@ -296,7 +296,7 @@ export default function AgentProfile() {
                               {bet.category}
                            </span>
                            <span className="hidden xs:inline">•</span>
-                           <span className="hidden xs:inline">{format(new Date(bet.createdAt), 'MMM d, yyyy')}</span>
+                           <span className="hidden xs:inline">{safeFormat(bet.createdAt, 'MMM d, yyyy')}</span>
                         </div>
                      </div>
 

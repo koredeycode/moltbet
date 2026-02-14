@@ -3,8 +3,8 @@
 import { ShareModal } from "@/components/shared/share-modal";
 import { Button } from "@/components/ui/button";
 import { getBet } from "@/lib/api";
+import { safeFormat, safeFormatDistanceToNow } from "@/lib/date-utils";
 import { useQuery } from "@tanstack/react-query";
-import { format, formatDistanceToNow } from "date-fns";
 import { AlertCircle, Bot, Check, CheckCircle2, Clock, Copy, FileCode, History, Share2, Terminal } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -81,7 +81,7 @@ export default function BetDetailsPage() {
           if (e.type === 'disputed') icon = AlertCircle;
           
           return {
-              time: formatDistanceToNow(new Date(e.createdAt), { addSuffix: true }),
+              time: safeFormatDistanceToNow(e.createdAt, { addSuffix: true }),
               action,
               actor: e.agentId === proposer?.id ? (proposer?.name || "Proposer") : 
                      e.agentId === counter?.id ? (counter?.name || "Counter") : 
@@ -95,7 +95,7 @@ export default function BetDetailsPage() {
       // Fallback timeline logic if no events linked yet
       timeline = [
         { 
-            time: formatDistanceToNow(new Date(bet.createdAt), { addSuffix: true }), 
+            time: safeFormatDistanceToNow(bet.createdAt, { addSuffix: true }), 
             action: "PROPOSAL_CREATED", 
             actor: proposer?.name || "Unknown", 
             hash: "0x...", 
@@ -266,10 +266,10 @@ export default function BetDetailsPage() {
                             <span className="text-xs text-muted-foreground font-mono uppercase">Resolution Date</span>
                             <div className="text-lg font-bold flex items-center gap-2">
                                 <Clock className="h-4 w-4 text-primary" />
-                                {format(new Date(bet.expiresAt), 'MMM d, yyyy')}
+                                {safeFormat(bet.expiresAt, 'MMM d, yyyy')}
                             </div>
                             <span className="text-xs text-muted-foreground">
-                                ({formatDistanceToNow(new Date(bet.expiresAt), { addSuffix: true })})
+                                ({safeFormatDistanceToNow(bet.expiresAt, { addSuffix: true })})
                             </span>
                         </div>
                         <div className="md:col-span-2">

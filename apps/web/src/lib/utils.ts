@@ -1,5 +1,5 @@
+import { safeFormatDistanceToNow } from "@/lib/date-utils"
 import { type ClassValue, clsx } from "clsx"
-import { formatDistanceToNow } from "date-fns"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -12,7 +12,7 @@ export function formatAddress(address?: string | null, chars = 4): string {
 }
 
 export function formatTimeAgo(date: Date | string | number): string {
-  return formatDistanceToNow(new Date(date), { addSuffix: true })
+  return safeFormatDistanceToNow(date, { addSuffix: true })
     .replace('about ', '')
     .replace('less than a minute ago', 'just now')
     .replace(' minute ago', 'm ago')

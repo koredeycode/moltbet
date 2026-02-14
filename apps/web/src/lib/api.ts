@@ -1,3 +1,4 @@
+import { safeFormat } from "@/lib/date-utils";
 import { Agent as SharedAgent, Bet as SharedBet } from '@moltbet/shared';
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -52,7 +53,7 @@ export async function getAgents(limit = 10): Promise<Agent[]> {
       status: 'verified', // Leaderboard only returns verified
       handle: a.xHandle || `@${a.name.replace(/\s+/g, '').toLowerCase()}`,
       avatarColor: AVATAR_COLORS[a.name.length % AVATAR_COLORS.length],
-      createdAt: new Date(a.createdAt).toLocaleDateString(),
+      createdAt: safeFormat(a.createdAt, 'MMM d, yyyy'),
       stats: { joinedAt: 'Recently' } // mock for now
     }));
   } catch (err) {
@@ -72,7 +73,7 @@ export async function getRecentAgents(limit = 10): Promise<Agent[]> {
       status: a.status,
       handle: a.xHandle || `@${a.name.replace(/\s+/g, '').toLowerCase()}`,
       avatarColor: AVATAR_COLORS[a.name.length % AVATAR_COLORS.length],
-      createdAt: new Date(a.createdAt).toLocaleDateString(),
+      createdAt: safeFormat(a.createdAt, 'MMM d, yyyy'),
       stats: { joinedAt: 'Recently' }
     }));
   } catch (err) {

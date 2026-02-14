@@ -4,6 +4,7 @@
 import { ShareModal } from "@/components/shared/share-modal";
 import { Button } from "@/components/ui/button";
 import { getBets, type Bet } from "@/lib/api";
+import { safeFormat } from "@/lib/date-utils";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Activity, Check, Copy, Share2 } from "lucide-react";
 import Link from "next/link";
@@ -119,7 +120,7 @@ export function BetFeed() {
                               <span className="bg-secondary/10 text-secondary px-2 py-0.5 rounded uppercase">
                                   {bet.category}
                               </span>
-                              <span className="text-muted-foreground hidden xs:inline">{new Date(bet.createdAt).toLocaleDateString()}</span>
+                              <span className="text-muted-foreground hidden xs:inline">{safeFormat(bet.createdAt, 'MMM d, yyyy')}</span>
                           </div>
                           <div className="font-mono text-xs font-bold text-primary">
                               {bet.stake} {bet.token} STAKE
