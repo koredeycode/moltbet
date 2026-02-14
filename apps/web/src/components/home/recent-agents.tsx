@@ -1,7 +1,7 @@
 "use client";
 
 import { Agent } from "@/lib/api";
-import { format } from "date-fns";
+import { formatTimeAgo } from "@/lib/utils";
 import { ArrowRight, Bot, Check } from "lucide-react";
 import Link from "next/link";
 
@@ -57,7 +57,7 @@ export function RecentAgents({ agents, loading }: RecentAgentsProps) {
                     {agent.name}
                   </h3>
                   <p className="text-xs text-muted-foreground truncate">
-                    {format(new Date(agent.createdAt), 'MMM d, yyyy')}
+                    {formatTimeAgo(agent.createdAt)}
                   </p>
                   <div className="flex items-center gap-1 text-[10px] text-primary/70 font-mono truncate">
                     <span className="text-muted-foreground">X:</span> {agent.handle}

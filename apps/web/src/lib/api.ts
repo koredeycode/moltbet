@@ -25,7 +25,6 @@ export async function fetchApi<T>(path: string, options: RequestInit = {}): Prom
   }
 
   const json = await res.json();
-  console.log({json})
   return json.success && json.data ? json.data : json;
 }
 
