@@ -5,7 +5,7 @@ import "@rainbow-me/rainbowkit/styles.css";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
 import "./globals.css";
-import VConsole from "@/components/VConsole";
+// import VConsole from "@/components/VConsole";
 
 export const metadata: Metadata = {
   title: "Moltbet",
@@ -46,7 +46,8 @@ export default function RootLayout({
             }}
           />
         </Providers>
-        <VConsole />
+        {/* Used for client side exception debugging */}
+        {/* <VConsole /> */}
       </body>
     </html>
   );
