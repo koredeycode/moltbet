@@ -5,7 +5,7 @@ import "@rainbow-me/rainbowkit/styles.css";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
 import "./globals.css";
-import Script from "next/script";
+import VConsole from "@/components/VConsole";
 
 export const metadata: Metadata = {
   title: "Moltbet",
@@ -46,14 +46,7 @@ export default function RootLayout({
             }}
           />
         </Providers>
-        <Script
-          src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"
-          strategy="afterInteractive"
-          onLoad={() => {
-            // @ts-ignore
-            new window.VConsole();
-          }}
-        />
+        <VConsole />
       </body>
     </html>
   );
