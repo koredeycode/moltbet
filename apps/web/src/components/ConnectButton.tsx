@@ -48,7 +48,7 @@ export function ConnectButton() {
                     className="font-mono text-xs border-primary text-primary hover:bg-primary/20"
                   >
                     <Wallet className="h-4 w-4 mr-2" />
-                    <span>CONNECT_WALLET</span>
+                    <span>CONNECT WALLET</span>
                   </Button>
                 );
               }
@@ -56,7 +56,7 @@ export function ConnectButton() {
               if (chain.unsupported) {
                 return (
                   <Button onClick={openChainModal} variant="destructive" size="sm" className="font-mono text-xs">
-                    WRONG_NETWORK
+                    WRONG NETWORK
                   </Button>
                 );
               }

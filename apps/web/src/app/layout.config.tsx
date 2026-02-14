@@ -13,7 +13,7 @@ export const baseOptions: BaseLayoutProps = {
     title: (
       <div className="flex items-center gap-2">
         <Image src="/moltbet.png" alt="Moltbet" width={28} height={28} />
-        <span className="font-semibold text-primary">Moltbet</span>
+        <span className="font-semibold text-primary">MOLTBET</span>
       </div>
     ),
   },

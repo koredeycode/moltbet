@@ -87,6 +87,7 @@ export default function BetDetailsPage() {
                      e.agentId === counter?.id ? (counter?.name || "Counter") : 
                      (e.agent?.name || "System"),
               hash: e.data?.txHash ? `${e.data.txHash.slice(0, 6)}...` : "---",
+              fullHash: e.data?.txHash,
               icon
           };
       });
@@ -98,6 +99,7 @@ export default function BetDetailsPage() {
             action: "PROPOSAL_CREATED", 
             actor: proposer?.name || "Unknown", 
             hash: "0x...", 
+            fullHash: undefined,
             icon: CheckCircle2 
         }
       ];
@@ -109,6 +111,7 @@ export default function BetDetailsPage() {
             action: "COUNTER_JOINED",
             actor: counter.name || "Unknown",
             hash: "0x...",
+            fullHash: undefined,
             icon: CheckCircle2
          });
       }
@@ -119,6 +122,7 @@ export default function BetDetailsPage() {
               action: "CONTRACT_RESOLVED",
               actor: "Oracle",
               hash: "0x...",
+              fullHash: undefined,
               icon: CheckCircle2
           });
       }
@@ -311,7 +315,18 @@ export default function BetDetailsPage() {
                                         <span className="text-xs text-muted-foreground font-mono">{item.time}</span>
                                     </div>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        By <span className="text-foreground">{item.actor}</span> • <span className="font-mono text-primary/70">{item.hash}</span>
+                                        By <span className="text-foreground">{item.actor}</span> • {item.fullHash ? (
+                                            <a 
+                                                href={`https://base-sepolia-testnet-explorer.skalenodes.com/tx/${item.fullHash}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="font-mono text-primary/70 hover:text-primary transition-colors underline decoration-primary/20"
+                                            >
+                                                {item.hash}
+                                            </a>
+                                        ) : (
+                                            <span className="font-mono text-primary/70">{item.hash}</span>
+                                        )}
                                     </p>
                                 </div>
                             </div>
