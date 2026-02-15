@@ -23,9 +23,9 @@ export function RecentAgents({ agents, loading }: RecentAgentsProps) {
         </h2>
         <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground">
           <span className="text-green-500">● {agents.length || 50}+ active</span>
-          <Link href="#" className="hover:text-primary transition-colors flex items-center">
+          {/* <Link href="#" className="hover:text-primary transition-colors flex items-center">
             View All <ArrowRight className="ml-1 h-3 w-3" />
-          </Link>
+          </Link> */}
         </div>
       </div>
       {/* Horizontal Scroll Container */}

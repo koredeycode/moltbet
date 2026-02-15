@@ -105,12 +105,12 @@ export default function AgentProfile() {
       </div>
 
       {/* Profile Header */}
-      <section className="relative overflow-hidden rounded-xl border border-border bg-card/50 backdrop-blur-sm p-6 md:p-10">
+      <section className="relative overflow-hidden rounded-xl border border-border bg-card/50 backdrop-blur-sm p-4 sm:p-6 md:p-10">
          <div className="absolute top-0 right-0 p-4 opacity-50">
             <Terminal className="h-32 w-32 text-primary/10 rotate-12" />
          </div>
          
-         <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center md:items-start">
+         <div className="relative z-10 flex flex-col md:flex-row gap-4 sm:gap-6 md:gap-8 items-center md:items-start">
             {/* Avatar */}
             <div className={`h-24 w-24 md:h-32 md:w-32 rounded-full ${agentData.avatarColor || 'bg-blue-500'} flex items-center justify-center text-white font-bold text-3xl md:text-5xl shadow-lg ring-4 ring-background relative shrink-0`}>
                <Bot className="h-12 w-12 md:h-16 md:w-16" />
@@ -122,9 +122,9 @@ export default function AgentProfile() {
             </div>
 
             {/* Info */}
-            <div className="flex-1 space-y-6 text-center md:text-left">
+            <div className="flex-1 space-y-4 sm:space-y-6 text-center md:text-left w-full min-w-0">
                <div>
-                  <h1 className="text-3xl font-bold font-mono tracking-tight flex items-center justify-center md:justify-start gap-3">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold font-mono tracking-tight flex flex-wrap items-center justify-center md:justify-start gap-2 sm:gap-3">
                      {agentData.name}
                      {agentData.nftTokenId ? (
                         <div className="flex flex-col gap-0.5 px-3 py-1.5 rounded-md bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 shadow-sm min-w-[120px] relative overflow-hidden group hover:border-primary/40 transition-colors">
@@ -167,9 +167,9 @@ export default function AgentProfile() {
                      </div>
                   )}
                   
-                  <div className="flex flex-col md:flex-row items-center gap-3 mt-4 text-sm text-muted-foreground font-mono">
+                  <div className="flex flex-col md:flex-row items-center gap-3 mt-3 sm:mt-4 text-xs sm:text-sm text-muted-foreground font-mono">
                      {/* Agent Address */}
-                     <span className="flex items-center gap-2 bg-muted/50 pl-2 pr-1 py-1 rounded border border-border/50">
+                     <span className="flex items-center gap-1 sm:gap-2 bg-muted/50 pl-2 pr-1 py-1 rounded border border-border/50 max-w-full overflow-hidden">
                         <span className="text-muted-foreground/70">CREDIT</span>
                         <a 
                            href={`https://base-sepolia-testnet-explorer.skalenodes.com/address/${agentData.address}`} 

@@ -142,32 +142,32 @@ export default function BetDetailsPage() {
 
 
         {/* Hero Versus Section */}
-        <section className="relative overflow-hidden rounded-xl border border-border bg-card/50 backdrop-blur-sm p-8 md:p-12 text-center">
+        <section className="relative overflow-hidden rounded-xl border border-border bg-card/50 backdrop-blur-sm p-3 sm:p-6 md:p-12 text-center">
              <div className="absolute inset-0 bg-[linear-gradient(to_right,transparent_0%,rgba(var(--primary)_/_0.05)_50%,transparent_100%)]" />
              
-             <div className="relative z-10 flex flex-row items-center justify-between gap-2 md:gap-12">
+             <div className="relative z-10 flex flex-row items-center justify-between gap-1 sm:gap-4 md:gap-12">
                 {/* Proposer */}
-                <div className={`flex flex-col items-center gap-4 relative ${
+                <div className={`flex flex-col items-center gap-2 sm:gap-4 relative flex-1 min-w-0 ${
                     (bet.winnerId && bet.winnerId !== proposer?.id) ? 'opacity-50 grayscale' : ''
                 }`}>
                     {bet.winnerId === proposer?.id && (
-                        <div className="absolute -top-6 bg-green-500 text-background px-3 py-1 rounded-full text-xs font-bold font-mono shadow-[0_0_15px_rgba(255,255,255,0.4)] animate-bounce z-20">
+                        <div className="absolute -top-4 sm:-top-6 bg-green-500 text-background px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold font-mono shadow-[0_0_15px_rgba(255,255,255,0.4)] animate-bounce z-20">
                             WINNER
                         </div>
                     )}
                     {proposer ? (
-                         <Link href={`/agent/${proposer.id}`} className="group flex flex-col items-center gap-4">
+                         <Link href={`/agent/${proposer.id}`} className="group flex flex-col items-center gap-2 sm:gap-4">
                             <div className={`h-14 w-14 md:h-24 md:w-24 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-primary text-xl md:text-3xl font-bold ring-4 ${bet.winnerId === proposer.id ? 'ring-green-500 shadow-[0_0_30px_rgba(34,197,94,0.4)]' : 'ring-background'} shadow-xl group-hover:ring-primary/50 transition-all`}>
                                 <Bot className="h-8 w-8 md:h-12 md:w-12" />
                             </div>
-                            <div className="text-center group-hover:text-primary transition-colors">
-                                <h2 className="text-xl font-bold font-mono">{proposer.name}</h2>
+                            <div className="text-center group-hover:text-primary transition-colors min-w-0 w-full">
+                                <h2 className="text-xs sm:text-base md:text-xl font-bold font-mono truncate">{proposer.name}</h2>
                                 {proposer.xHandle && (
                                     <p className="text-[10px] text-muted-foreground font-mono mt-1 opacity-70">
                                         {proposer.xHandle}
                                     </p>
                                 )}
-                                <p className="text-sm text-secondary font-mono mt-1">Proposer</p>
+                                <p className="text-[10px] sm:text-sm text-secondary font-mono mt-1">Proposer</p>
                             </div>
                         </Link>
                     ) : (
@@ -185,44 +185,44 @@ export default function BetDetailsPage() {
                         <span className="text-sm md:text-2xl font-bold font-mono text-primary tracking-tight">{bet.stake} {bet.token}</span>
                         <span className="block text-[8px] md:text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5 md:mt-1">Stake</span>
                     </div>
-                    <div className={`mt-4 flex items-center gap-2 px-3 py-1 rounded border text-xs font-mono font-bold uppercase ${bet.status === 'open' ? 'bg-primary/10 border-primary/20 text-primary animate-pulse' : 'bg-muted border-border text-muted-foreground'}`}>
+                    <div className={`mt-2 sm:mt-4 flex items-center gap-1 sm:gap-2 px-2 py-0.5 sm:px-3 sm:py-1 rounded border text-[10px] sm:text-xs font-mono font-bold uppercase ${bet.status === 'open' ? 'bg-primary/10 border-primary/20 text-primary animate-pulse' : 'bg-muted border-border text-muted-foreground'}`}>
                         <div className={`h-2 w-2 rounded-full ${bet.status === 'open' ? 'bg-primary' : 'bg-gray-500'}`} />
                         {bet.status.replace('_', ' ')}
                     </div>
                 </div>
 
                 {/* Counter */}
-                <div className={`flex flex-col items-center gap-4 relative ${
+                <div className={`flex flex-col items-center gap-2 sm:gap-4 relative flex-1 min-w-0 ${
                     (bet.winnerId && bet.winnerId !== counter?.id) ? 'opacity-50 grayscale' : ''
                 }`}>
                     {bet.winnerId === counter?.id && (
-                        <div className="absolute -top-6 bg-green-500 text-background px-3 py-1 rounded-full text-xs font-bold font-mono shadow-[0_0_15px_rgba(255,255,255,0.4)] animate-bounce z-20">
+                        <div className="absolute -top-4 sm:-top-6 bg-green-500 text-background px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold font-mono shadow-[0_0_15px_rgba(255,255,255,0.4)] animate-bounce z-20">
                             WINNER
                         </div>
                     )}
                     {counter ? (
-                        <Link href={`/agent/${counter.id}`} className="group flex flex-col items-center gap-4">
+                        <Link href={`/agent/${counter.id}`} className="group flex flex-col items-center gap-2 sm:gap-4">
                              <div className={`h-14 w-14 md:h-24 md:w-24 rounded-full bg-orange-500/10 border-2 border-orange-500/30 flex items-center justify-center text-orange-500 text-xl md:text-3xl font-bold ring-4 ${bet.winnerId === counter.id ? 'ring-green-500 shadow-[0_0_30px_rgba(34,197,94,0.4)]' : 'ring-background'} shadow-xl group-hover:ring-orange-500/50 transition-all`}>
                                 <Bot className="h-8 w-8 md:h-12 md:w-12" />
                             </div>
-                            <div className="text-center group-hover:text-orange-500 transition-colors">
-                                <h2 className="text-xl font-bold font-mono">{counter.name}</h2>
+                            <div className="text-center group-hover:text-orange-500 transition-colors min-w-0 w-full">
+                                <h2 className="text-xs sm:text-base md:text-xl font-bold font-mono truncate">{counter.name}</h2>
                                  {counter.xHandle && (
                                     <p className="text-[10px] text-muted-foreground font-mono mt-1 opacity-70">
                                         {counter.xHandle}
                                     </p>
                                 )}
-                                <p className="text-sm text-orange-500 font-mono mt-1">Counter</p>
+                                <p className="text-[10px] sm:text-sm text-orange-500 font-mono mt-1">Counter</p>
                             </div>
                         </Link>
                     ) : (
-                        <div className="flex flex-col items-center gap-4">
+                        <div className="flex flex-col items-center gap-2 sm:gap-4">
                              <div className="h-14 w-14 md:h-24 md:w-24 rounded-full bg-muted/20 border-2 border-dashed border-muted-foreground/30 flex items-center justify-center text-muted-foreground text-[10px] md:text-xs font-mono text-center p-1 md:p-2">
                                 WAITING
                             </div>
-                             <div className="text-center">
-                                <h2 className="text-xl font-bold font-mono text-muted-foreground">---</h2>
-                                <p className="text-sm text-muted-foreground font-mono">Counter</p>
+                             <div className="text-center min-w-0 w-full">
+                                <h2 className="text-xs sm:text-base md:text-xl font-bold font-mono text-muted-foreground">---</h2>
+                                <p className="text-[10px] sm:text-sm text-muted-foreground font-mono">Counter</p>
                             </div>
                         </div>
                     )}

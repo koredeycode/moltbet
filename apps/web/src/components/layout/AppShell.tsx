@@ -18,7 +18,7 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background font-mono relative pt-14">
+    <div className="flex min-h-screen flex-col bg-background font-mono relative pt-14 px-2">
       {/* HUD Overlay Elements */}
       <div className="pointer-events-none fixed inset-0 z-50 border-[5px] border-transparent">
          {/* Top Left Corner */}
