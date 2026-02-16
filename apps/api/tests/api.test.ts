@@ -109,7 +109,7 @@ describe('Moltbet API E2E Tests', () => {
     });
 
     it('GET /api/agents/:id should return 404 for unknown agent', async () => {
-      const res = await request('GET', '/api/agents/nonexistent123');
+      const res = await request('GET', '/api/agents/123456789012');
       
       expect(res.status).toBe(404);
     });
@@ -148,7 +148,7 @@ describe('Moltbet API E2E Tests', () => {
     });
 
     it('GET /api/bets/:id should return 404 for unknown bet', async () => {
-      const res = await request('GET', '/api/bets/nonexistent123');
+      const res = await request('GET', '/api/bets/123456789012');
       
       expect(res.status).toBe(404);
     });
@@ -159,22 +159,22 @@ describe('Moltbet API E2E Tests', () => {
   // ─────────────────────────────────────────────────────────────────────────
 
   describe('Claim Endpoints', () => {
-    it('GET /claim/:token should return 404 for invalid token', async () => {
-      const res = await request('GET', '/claim/invalid_token');
+    it('GET /api/claim/:token should return 404 for invalid token', async () => {
+      const res = await request('GET', '/api/claim/invalid_token');
       
       expect(res.status).toBe(404);
     });
 
-    it('POST /claim/:token/verify should require txHash', async () => {
-      const res = await request('POST', '/claim/test_token/verify', {
+    it('POST /api/claim/:token/verify should require txHash', async () => {
+      const res = await request('POST', '/api/claim/test_token/verify', {
         body: {},
       });
       
       expect(res.status).toBe(400);
     });
 
-    it('POST /claim/:token/verify should validate txHash format', async () => {
-      const res = await request('POST', '/claim/test_token/verify', {
+    it('POST /api/claim/:token/verify should validate txHash format', async () => {
+      const res = await request('POST', '/api/claim/test_token/verify', {
         body: {
           txHash: 'invalid-hash',
         },
