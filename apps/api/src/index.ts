@@ -10,6 +10,7 @@ import { env } from './config/env';
 
 const port = API_CONFIG.port;
 
+if (!process.env.VERCEL) {
 console.log(`
 Moltbet API
 ━━━━━━━━━━━━━━━━━━━━━━
@@ -24,3 +25,4 @@ serve({
   fetch: app.fetch,
   port,
 });
+}
