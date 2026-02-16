@@ -5,6 +5,7 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 import { timing } from 'hono/timing';
+import { handle } from 'hono/vercel';
 
 // Routes
 import adminRouter from './routes/admin';
@@ -152,6 +153,13 @@ app.onError((err, c) => {
     error: env.NODE_ENV === 'production' ? 'Internal server error' : err.message 
   }, 500);
 });
+
+// Vercel Handlers (for Serverless/Edge)
+export const GET = handle(app);
+export const POST = handle(app);
+export const PUT = handle(app);
+export const DELETE = handle(app);
+export const PATCH = handle(app);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Start Server
